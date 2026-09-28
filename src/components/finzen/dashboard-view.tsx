@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, Lightbulb, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import {
   Bar,
@@ -28,7 +29,7 @@ import { TransactionRow } from '@/components/finzen/transaction-row';
 import { useAlerts } from '@/hooks/use-alerts';
 
 export function DashboardView() {
-  const { transactions, accounts, categories, locale, baseCurrency, setActiveView, setAddSheetOpen, setEditingTransactionId } =
+  const { transactions, accounts, categories, locale, baseCurrency, setActiveView, setAddSheetOpen, setEditingTransactionId, loading } =
     useFinZenStore();
   const t = translations[locale];
   const alerts = useAlerts();
@@ -132,6 +133,27 @@ export function DashboardView() {
   const recent = [...transactions]
     .sort((a, b) => new Date(b.occurredOn).getTime() - new Date(a.occurredOn).getTime())
     .slice(0, 5);
+
+  // [UX fix, auditoría P2-8] Mientras cargan los datos (login o recarga), mostrar
+  // skeletons en lugar del estado vacío — evita el susto de "perdí mis datos".
+  // (Colocado tras TODOS los hooks para respetar rules-of-hooks.)
+  if (loading) {
+    return (
+      <div className="space-y-6" aria-busy="true" aria-label="Cargando panel">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-44" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <Skeleton className="h-36 w-full rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+          <Skeleton className="h-28 rounded-xl" />
+        </div>
+        <Skeleton className="h-72 w-full rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

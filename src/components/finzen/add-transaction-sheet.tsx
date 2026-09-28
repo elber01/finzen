@@ -28,6 +28,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { CalendarIcon, Paperclip, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+// [UX fix] "September 27th, 2026" en UI española — date-fns sin locale
+// formatea siempre en inglés. Localizamos según el idioma activo.
+import { es as dateFnsEs, enUS as dateFnsEn } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useFinZenStore } from '@/store/finzen-store';
 import { translations } from '@/lib/finzen/i18n';
@@ -479,7 +482,7 @@ export function AddTransactionSheet() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-11 justify-start font-normal">
                   <CalendarIcon className="w-4 h-4 mr-2" />
-                  {format(date, 'PPP')}
+                  {format(date, 'PPP', { locale: locale === 'es' ? dateFnsEs : dateFnsEn })}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

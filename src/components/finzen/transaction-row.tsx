@@ -58,14 +58,17 @@ export function TransactionRow({ tx, onEdit }: TransactionRowProps) {
       {/* Description + meta */}
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{tx.description}</div>
-        <div className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
-          <span>{category ? (locale === 'es' ? (category.nameEs || category.name) : (category.nameEn || category.name)) : t[`transactions.${tx.type}`]}</span>
-          <span>·</span>
-          <span>{formatRelativeDate(tx.occurredOn, locale)}</span>
+        {/* [UX fix] En móvil el nombre de la cuenta quedaba en ~11px (ilegible).
+            shrink-0 en categoría/fecha y truncate SOLO en la cuenta — es el
+            único elemento que puede sacrificarse con ellipsis. */}
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
+          <span className="shrink-0">{category ? (locale === 'es' ? (category.nameEs || category.name) : (category.nameEn || category.name)) : t[`transactions.${tx.type}`]}</span>
+          <span className="shrink-0">·</span>
+          <span className="shrink-0">{formatRelativeDate(tx.occurredOn, locale)}</span>
           {relevantAccount && (
             <>
-              <span>·</span>
-              <span className="truncate">{relevantAccount.name}</span>
+              <span className="shrink-0">·</span>
+              <span className="truncate min-w-0">{relevantAccount.name}</span>
             </>
           )}
         </div>

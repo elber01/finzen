@@ -12,6 +12,7 @@ export type TranslationKey =
   | 'nav.import'
   | 'nav.lightMode'
   | 'nav.darkMode'
+  | 'nav.more'
   | 'dashboard.greeting.morning'
   | 'dashboard.greeting.afternoon'
   | 'dashboard.greeting.evening'
@@ -122,6 +123,7 @@ const es: Record<TranslationKey, string> = {
   'nav.import': 'Importar',
   'nav.lightMode': 'Modo claro',
   'nav.darkMode': 'Modo oscuro',
+  'nav.more': 'Más',
   'dashboard.greeting.morning': 'Buenos días',
   'dashboard.greeting.afternoon': 'Buenas tardes',
   'dashboard.greeting.evening': 'Buenas noches',
@@ -233,6 +235,7 @@ const en: Record<TranslationKey, string> = {
   'nav.import': 'Import',
   'nav.lightMode': 'Light mode',
   'nav.darkMode': 'Dark mode',
+  'nav.more': 'More',
   'dashboard.greeting.morning': 'Good morning',
   'dashboard.greeting.afternoon': 'Good afternoon',
   'dashboard.greeting.evening': 'Good evening',

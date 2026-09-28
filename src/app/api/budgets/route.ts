@@ -31,10 +31,17 @@ export async function POST(req: Request) {
   const start = startDate ? new Date(startDate) : new Date(now.getFullYear(), now.getMonth(), 1);
   const end = endDate ? new Date(endDate) : new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+  // [i18n fix] El nombre auto ("September 2026") debe respetar el idioma del usuario
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { preferredLang: true },
+  });
+  const monthLocale = user?.preferredLang === 'en' ? 'en-US' : 'es-DO';
+
   const budget = await db.budget.create({
     data: {
       userId: session.user.id,
-      name: name || `${now.toLocaleString('en', { month: 'long' })} ${now.getFullYear()}`,
+      name: name || `${now.toLocaleString(monthLocale, { month: 'long' })} ${now.getFullYear()}`,
       period: period || 'monthly',
       startDate: start,
       endDate: end,

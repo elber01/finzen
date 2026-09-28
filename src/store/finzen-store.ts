@@ -143,7 +143,9 @@ export const useFinZenStore = create<FinZenState>((set, get) => ({
   addSheetOpen: false,
   sidebarCollapsed: false,
   editingTransactionId: null,
-  loading: false,
+  // [UX] Empieza en true: cubre desde el primer render hasta que loadData
+  // resuelve — evita el flash de "¡Bienvenido! $0.00" con datos existentes.
+  loading: true,
 
   // Data
   transactions: [],
