@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+.next/
+out/
+dist/
+dist-server/
+*.tsbuildinfo
+
+# Secrets & entorno — NUNCA commit
+.env
+.env.*
+!.env.example
+
+# Bases de datos locales y backups con datos personales (PII + API keys)
+db/custom.db
+db/backup.json
+db/*.backup
+*.sqlite
+*.db-journal
+
+# Turso
+*.turso
+
+# Logs
+*.log
+dev.log
+server.log
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Basura de herramientas
+tool-results/

@@ -1,0 +1,170 @@
+// FinZen Prisma Schema
+// SQLite database (sandbox: db/custom.db | production: Turso libSQL)
+//
+// The `driverAdapters` preview feature lets us use the @prisma/adapter-libsql
+// driver, which connects Prisma to Turso (libSQL) over HTTP. This means the
+// same schema.prisma works for BOTH the local sandbox (file-based SQLite) and
+// the Vercel production deploy (Turso), selected at runtime via DATABASE_URL.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  // IMPORTANT: this `url` is hardcoded (NOT env-based) so Prisma's
+  // schema validation passes during `prisma generate` AND at runtime.
+  // The actual database connection is configured via the
+  // @prisma/adapter-libsql driver in src/lib/db.ts, which reads
+  // process.env.DATABASE_URL at runtime and supports both `file:` URLs
+  // (sandbox dev / Vercel fallback) and `libsql:` URLs (Turso).
+  url      = "file:./db/placeholder.db"
+}
+
+// ────────────────────────────────────────────
+// USER & AUTH
+// ────────────────────────────────────────────
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  passwordHash String
+  preferredLang String       @default("es")
+  baseCurrency String        @default("USD")
+  theme        String        @default("system")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  accounts     Account[]
+  transactions Transaction[]
+  budgets      Budget[]
+  categories   Category[]
+  sessions     Session[]
+  apiKeys      ApiKey[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+}
+
+// ────────────────────────────────────────────
+// ACCOUNTS (double-entry: asset/liability/equity/income/expense)
+// ────────────────────────────────────────────
+model Account {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  accountType   String        @default("asset") // asset|liability|equity|income|expense
+  subType       String?       // checking|savings|credit_card|cash|crypto_wallet|investment
+  currency      String        @default("USD")
+  currentBalance Float        @default(0)
+  institution   String?
+  lastFour      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+// ────────────────────────────────────────────
+// CATEGORIES
+// ────────────────────────────────────────────
+model Category {
+  id         String        @id @default(cuid())
+  userId     String?
+  user       User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  nameEs     String?
+  nameEn     String?
+  icon       String?
+  color      String?
+  direction  String        @default("expense") // income|expense|transfer
+  isSystem   Boolean       @default(false)
+  sortOrder  Int           @default(0)
+  createdAt  DateTime      @default(now())
+
+  transactions Transaction[]
+  budgetItems  BudgetItem[]
+
+  @@index([userId])
+}
+
+// ────────────────────────────────────────────
+// TRANSACTIONS
+// ────────────────────────────────────────────
+model Transaction {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String        // income|expense|transfer|adjustment
+  amount        Float
+  currency      String        @default("USD")
+  fromAccountId String        // can be a real account ID or virtual "x_categoryId"
+  toAccountId   String        // can be a real account ID or virtual "x_categoryId"
+  categoryId    String?
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  description   String?
+  occurredOn    DateTime
+  tags          String        @default("")
+  importSource  String?       // manual|csv|ocr|plaid
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId, occurredOn])
+  @@index([fromAccountId])
+  @@index([categoryId])
+}
+
+// ────────────────────────────────────────────
+// BUDGETS
+// ────────────────────────────────────────────
+model Budget {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  period    String       @default("monthly")
+  startDate DateTime
+  endDate   DateTime
+  items     BudgetItem[]
+
+  createdAt DateTime     @default(now())
+}
+
+model BudgetItem {
+  id                 String   @id @default(cuid())
+  budgetId           String
+  budget             Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  categoryId         String
+  category           Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  plannedAmount      Float
+  alertThresholdPct  Int      @default(80)
+  createdAt          DateTime @default(now())
+}
+
+// ────────────────────────────────────────────
+// API KEYS — for AI agent integration
+// ────────────────────────────────────────────
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String                          // e.g. "Claude Assistant", "My GPT Agent"
+  keyHash     String   @unique                // SHA-256 hash of the API key
+  keyPrefix   String                          // First 8 chars for display (e.g. "fz_a1b2...")
+  permissions String   @default("read,write")  // comma-separated: read,write
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?                        // null = no expiry
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
