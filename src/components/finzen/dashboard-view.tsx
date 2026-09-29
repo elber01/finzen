@@ -27,12 +27,14 @@ import { computeNetWorth } from '@/lib/finzen/finance';
 import { KpiCard } from '@/components/finzen/kpi-card';
 import { TransactionRow } from '@/components/finzen/transaction-row';
 import { useAlerts } from '@/hooks/use-alerts';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 export function DashboardView() {
   const { transactions, accounts, categories, locale, baseCurrency, setActiveView, setAddSheetOpen, setEditingTransactionId, loading } =
     useFinZenStore();
   const t = translations[locale];
   const alerts = useAlerts();
+  const isMobile = useIsMobile();
 
   function handleEditTx(id: string) {
     setEditingTransactionId(id);
@@ -101,14 +103,15 @@ export function DashboardView() {
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   }, [monthTransactions, categories, baseCurrency, locale]);
 
-  // ── Cash flow chart data — 12 months, computed from real transactions
+  // ── Cash flow chart data — 12 meses (6 en móvil), computed from real transactions
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const cashFlowData = useMemo(() => {
     const baseCur = baseCurrency as CurrencyCode;
     const now = viewDate;
     const intlLocale = locale === 'es' ? 'es-DO' : 'en-US';
+    const monthsBack = isMobile ? 6 : 12;
     const months: { key: string; label: string }[] = [];
-    for (let i = 11; i >= 0; i--) {
+    for (let i = monthsBack - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = new Intl.DateTimeFormat(intlLocale, { month: 'short' }).format(d);
@@ -127,7 +130,7 @@ export function DashboardView() {
       }
       return { month: label, income, expenses };
     });
-  }, [transactions, baseCurrency, locale]);
+  }, [transactions, baseCurrency, locale, isMobile]);
 
   // ── Recent transactions (top 5)
   const recent = [...transactions]
@@ -214,7 +217,7 @@ export function DashboardView() {
         </Card>
       ) : (
         <>
-          {/* Hero: Net Worth */}
+          {/* Hero: Net Worth — variante gradiente (look fintech moderno) */}
           <KpiCard
             label={t['dashboard.netWorth']}
             amount={formatMoney(netWorth, baseCurrency, locale)}
@@ -223,6 +226,7 @@ export function DashboardView() {
             size="hero"
             sparkData={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, netWorth]}
             color="primary"
+            variant="gradient"
           />
 
           {/* Three KPI cards */}
@@ -258,7 +262,7 @@ export function DashboardView() {
               <span className="text-xs text-muted-foreground">12 {locale === 'es' ? 'meses' : 'months'}</span>
             </div>
             <div className="h-56 sm:h-64 w-full overflow-x-auto scroll-area">
-              <div className="h-full min-w-[500px] sm:min-w-0">
+              <div className="h-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cashFlowData} barGap={2}>
                   <XAxis
@@ -276,7 +280,7 @@ export function DashboardView() {
                     axisLine={false}
                     tickLine={false}
                     width={50}
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
+                    tickFormatter={(v: number) => formatMoney(v, baseCurrency, locale, { compact: true })}
                   />
                   <Tooltip
                     cursor={{ fill: 'var(--surface-2)' }}

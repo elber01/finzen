@@ -160,12 +160,12 @@ export function ApiKeyManager() {
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => handleToggle(key.id, key.isActive)} className="p-1.5 rounded-md hover:bg-surface-2 text-muted-foreground min-w-[32px] min-h-[32px] flex items-center justify-center" title={key.isActive ? (locale === 'es' ? 'Desactivar' : 'Deactivate') : (locale === 'es' ? 'Activar' : 'Activate')}>
+                <button onClick={() => handleToggle(key.id, key.isActive)} className="p-1.5 rounded-md hover:bg-surface-2 text-muted-foreground min-w-[40px] min-h-[40px] flex items-center justify-center" title={key.isActive ? (locale === 'es' ? 'Desactivar' : 'Deactivate') : (locale === 'es' ? 'Activar' : 'Activate')}>
                   {key.isActive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                 </button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button className="p-1.5 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[32px] min-h-[32px] flex items-center justify-center" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button className="p-1.5 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[40px] min-h-[40px] flex items-center justify-center" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>

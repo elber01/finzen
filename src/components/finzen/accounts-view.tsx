@@ -190,10 +190,10 @@ export function AccountsView() {
                     <div><div className="text-sm font-semibold">{a.name}</div><div className="text-xs text-muted-foreground">{locale === 'es' ? meta.labelEs : meta.label}{a.lastFour && ` · •••• ${a.lastFour}`}</div></div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(a.id)} className="p-2 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => openEdit(a.id)} className="p-2 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-4 h-4" /></button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="p-2 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>
+                        <button className="p-2 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>{locale === 'es' ? '¿Eliminar cuenta?' : 'Delete account?'}</AlertDialogTitle><AlertDialogDescription>{locale === 'es' ? `Se eliminará "${a.name}"${linkedTx > 0 ? ` y ${linkedTx} transacciones` : ''}.` : `Delete "${a.name}"${linkedTx > 0 ? ` and ${linkedTx} transactions` : ''}?`}</AlertDialogDescription></AlertDialogHeader>

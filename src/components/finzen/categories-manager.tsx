@@ -68,11 +68,11 @@ export function CategoriesManager() {
               {c.isSystem && <div className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Lock className="w-2.5 h-2.5" /> {locale === 'es' ? 'Sistema' : 'System'}</div>}
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <button onClick={() => openEdit(c.id)} className="p-1.5 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground min-w-[32px] min-h-[32px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => openEdit(c.id)} className="p-1.5 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
               {!c.isSystem && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button className="p-1.5 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[32px] min-h-[32px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button className="p-1.5 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>

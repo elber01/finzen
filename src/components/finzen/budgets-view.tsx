@@ -104,10 +104,10 @@ export function BudgetsView() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 min-w-0"><span className="text-base shrink-0">{item.category?.icon ?? '📦'}</span><span className="text-sm font-medium truncate">{item.category ? (locale === 'es' ? (item.category.nameEs || item.category.name) : (item.category.nameEn || item.category.name)) : '—'}</span>{(isOver || isAppr) && <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: isOver ? 'var(--expense-soft)' : 'var(--warning-soft)', color: isOver ? 'var(--expense)' : 'var(--warning)' }}>{isOver ? t['budgets.overBudget'] : t['budgets.approaching']}</span>}</div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => openEdit(item.id)} className="p-2 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground min-w-[36px] min-h-[36px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => openEdit(item.id)} className="p-2 rounded-md hover:bg-surface-2 text-muted-foreground hover:text-foreground min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Edit"><Pencil className="w-3.5 h-3.5" /></button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <button className="p-2 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[36px] min-h-[36px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button className="p-2 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>{locale === 'es' ? '¿Eliminar?' : 'Delete?'}</AlertDialogTitle><AlertDialogDescription>{locale === 'es' ? 'No se puede deshacer.' : 'Cannot undo.'}</AlertDialogDescription></AlertDialogHeader>

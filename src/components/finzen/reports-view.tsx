@@ -15,12 +15,14 @@ import {
 } from 'recharts';
 import { Download } from 'lucide-react';
 import { useFinZenStore } from '@/store/finzen-store';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { translations } from '@/lib/finzen/i18n';
 import { convertAmount, formatMoney, type CurrencyCode } from '@/lib/finzen/currency';
 
 export function ReportsView() {
   const { transactions, categories, locale, baseCurrency } = useFinZenStore();
   const t = translations[locale];
+  const isMobile = useIsMobile();
 
   const [range, setRange] = useState<'6m' | '1y' | 'all'>('1y');
 
@@ -103,7 +105,7 @@ export function ReportsView() {
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`px-3 h-9 text-xs font-medium transition-colors ${
                   range === r ? 'bg-primary text-primary-foreground' : 'hover:bg-surface-2'
                 }`}
               >
@@ -145,7 +147,7 @@ export function ReportsView() {
       <Card className="p-5">
         <h2 className="text-lg font-semibold mb-4">{t['reports.incomeVsExpenses']}</h2>
         <div className="h-60 sm:h-72 w-full overflow-x-auto scroll-area">
-          <div className="h-full min-w-[500px] sm:min-w-0">
+          <div className="h-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -164,7 +166,7 @@ export function ReportsView() {
                 axisLine={false}
                 tickLine={false}
                 width={50}
-                tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
+                tickFormatter={(v: number) => formatMoney(v, baseCurrency as CurrencyCode, locale, { compact: true })}
               />
               <Tooltip
                 cursor={{ fill: 'var(--surface-2)' }}

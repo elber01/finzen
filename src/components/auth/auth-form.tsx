@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Wallet, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AuthForm() {
@@ -67,12 +67,18 @@ export function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-surface to-surface-2 p-4">
-      <Card className="w-full max-w-md p-8">
-        {/* Logo */}
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-gradient-to-br from-surface via-surface-2 to-primary/10">
+      {/* Acentos de fondo sutiles — profundidad sin ruido */}
+      <div aria-hidden className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      <div aria-hidden className="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-info/10 blur-3xl pointer-events-none" />
+      <Card className="relative w-full max-w-md p-8">
+        {/* Logo — marca enso, alineada con el favicon */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
-            <Wallet className="w-8 h-8 text-primary" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-info flex items-center justify-center mb-3 shadow-lg">
+            <svg viewBox="0 0 64 64" className="w-9 h-9" aria-hidden>
+              <path d="M32 13 a19 19 0 1 0 18.5 23.2" stroke="white" strokeWidth="6" strokeLinecap="round" fill="none" />
+              <circle cx="32" cy="32" r="4.5" fill="#34D399" />
+            </svg>
           </div>
           <h1 className="text-2xl font-bold text-primary">FinZen</h1>
           <p className="text-sm text-muted-foreground mt-1">
