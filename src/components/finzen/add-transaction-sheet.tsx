@@ -259,9 +259,37 @@ export function AddTransactionSheet() {
 
   async function handleDelete() {
     if (!editingTransactionId) return;
+    // [UX fix] Capturar ANTES de borrar: forceClose() limpia editingTransactionId
+    // y el toast de deshacer necesita los datos originales.
+    const tx = editingTx;
     try {
       await deleteTransaction(editingTransactionId);
-      toast.success(locale === 'es' ? 'Transacción eliminada' : 'Transaction deleted');
+      toast.success(locale === 'es' ? 'Transacción eliminada' : 'Transaction deleted', {
+        action: {
+          label: locale === 'es' ? 'Deshacer' : 'Undo',
+          onClick: async () => {
+            if (!tx) return;
+            try {
+              await addTransaction({
+                type: tx.type as TransactionType,
+                amount: tx.amount,
+                currency: tx.currency as CurrencyCode,
+                fromAccountId: tx.fromAccountId,
+                toAccountId: tx.toAccountId,
+                categoryId: tx.categoryId ?? undefined,
+                description: tx.description ?? '',
+                occurredOn: tx.occurredOn,
+                tags: tx.tags || '',
+                importSource: 'manual' as const,
+              });
+              toast.success(locale === 'es' ? 'Transacción restaurada' : 'Transaction restored');
+            } catch {
+              toast.error(locale === 'es' ? 'No se pudo restaurar' : 'Could not restore');
+            }
+          },
+        },
+        duration: 6000,
+      });
     } catch (err) {
       // [P0-2 fix] En error: NO cerrar — mostrar el fallo y mantener contexto
       toast.error(locale === 'es' ? 'Error al eliminar' : 'Failed to delete');
@@ -496,7 +524,8 @@ export function AddTransactionSheet() {
             </Popover>
           </div>
 
-          {/* Receipt attachment (mock) */}
+          {/* Receipt attachment (mock) — [UX fix] badge honesto: es un botón
+              que aún no funciona; no debe parecer funcional */}
           <button
             type="button"
             className="w-full h-11 rounded-md border border-dashed border-border text-sm text-muted-foreground hover:bg-surface-2 flex items-center justify-center gap-2"
@@ -504,6 +533,9 @@ export function AddTransactionSheet() {
           >
             <Paperclip className="w-4 h-4" />
             {t['tx.attachReceipt']}
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-2">
+              {locale === 'es' ? 'Próximamente' : 'Soon'}
+            </span>
           </button>
 
           {/* Actions */}

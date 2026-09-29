@@ -59,3 +59,35 @@ export async function PATCH(req: Request) {
 
   return NextResponse.json(updated);
 }
+
+// Delete account permanently (settings → danger zone).
+// El schema no tiene FKs — la cascada es manual. Orden: dependencias primero.
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const userId = session.user.id as string;
+
+  try {
+    await db.transaction.deleteMany({ where: { userId } });
+
+    const budgets = await db.budget.findMany({ where: { userId }, select: { id: true } });
+    if (budgets.length > 0) {
+      await db.budgetItem.deleteMany({ where: { budgetId: { in: budgets.map((b) => b.id) } } });
+    }
+    await db.budget.deleteMany({ where: { userId } });
+
+    await db.account.deleteMany({ where: { userId } });
+    await db.category.deleteMany({ where: { userId } });
+    await db.apiKey.deleteMany({ where: { userId } });
+    await db.session.deleteMany({ where: { userId } });
+
+    await db.user.delete({ where: { id: userId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[finzen] DELETE /api/me failed:', error);
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 });
+  }
+}

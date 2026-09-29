@@ -199,9 +199,9 @@ export function TransactionsView() {
             className="pl-9 h-10"
           />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 *:min-w-0">
           <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as DateFilter)}>
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 text-xs w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -223,7 +223,7 @@ export function TransactionsView() {
             />
           )}
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 text-xs w-full">
               <Filter className="w-3 h-3 mr-1" />
               <SelectValue placeholder={t['transactions.allCategories']} />
             </SelectTrigger>
@@ -237,7 +237,7 @@ export function TransactionsView() {
             </SelectContent>
           </Select>
           <Select value={memberFilter} onValueChange={setMemberFilter}>
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 text-xs w-full">
               <SelectValue placeholder={t['transactions.allMembers']} />
             </SelectTrigger>
             <SelectContent>
@@ -250,7 +250,7 @@ export function TransactionsView() {
             </SelectContent>
           </Select>
           <Select value={accountFilter} onValueChange={setAccountFilter}>
-            <SelectTrigger className="h-9 text-xs">
+            <SelectTrigger className="h-9 text-xs w-full">
               <SelectValue placeholder={t['transactions.allAccounts']} />
             </SelectTrigger>
             <SelectContent>

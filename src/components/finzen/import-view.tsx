@@ -135,7 +135,10 @@ export function ImportView() {
           <div className="flex gap-1.5 mt-3"><span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-surface-2">CSV</span><span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-surface-2">XLSX</span></div>
         </Card>
         <OcrFlow onOpenChange={() => {}} />
-        <Card className="p-5 cursor-pointer hover:border-primary/40 transition-colors" onClick={() => toast.info(locale === 'es' ? 'Plaid — próximamente' : 'Plaid — coming soon')}>
+        <Card className="p-5 cursor-pointer hover:border-primary/40 transition-colors relative" onClick={() => toast.info(locale === 'es' ? 'Plaid — próximamente' : 'Plaid — coming soon')}>
+          <span className="absolute top-3 right-3 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-2 text-muted-foreground">
+            {locale === 'es' ? 'Próximamente' : 'Soon'}
+          </span>
           <div className="w-12 h-12 rounded-xl bg-income/10 flex items-center justify-center mb-3"><Building2 className="w-6 h-6 text-income" /></div>
           <div className="text-base font-semibold">{t['import.bank']}</div><div className="text-xs text-muted-foreground mt-1">{t['import.bankDesc']}</div>
         </Card>
