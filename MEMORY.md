@@ -80,6 +80,14 @@ Sesión 29-sep-2026 (estabilización + UX con datos reales):
   Script `typecheck` añadido a package.json. `.env` local regenerado
   (el sandbox lo pierde en reinicios — solo lleva NEXTAUTH_SECRET de dev).
 
+**Producción (29-sep-2026):** repo `github.com/elber01/finzen` conectado por
+integración Git al proyecto Vercel **finzen-zeta** (`finzen-zeta.vercel.app`).
+Pipeline verificado end-to-end: push → build → deploy automático. Turso
+conectado (mismo `DATABASE_URL` de las fases 7.x). Se removió
+`ignoreBuildErrors` de next.config.ts (`c0f6aa9`) — el build de producción
+ahora valida tipos estrictamente. El dominio `app.getfinzen.com` sigue
+pendiente de repoint (§5).
+
 ## 5. Deuda técnica conocida (no apagar la alarma — priorizar)
 
 1. **CERO tests automatizados.** Recomendación: Vitest para `lib/finzen/`
