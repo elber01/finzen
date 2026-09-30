@@ -13,6 +13,27 @@ export type TranslationKey =
   | 'nav.lightMode'
   | 'nav.darkMode'
   | 'nav.more'
+  | 'nav.logout'
+  | 'auth.signIn'
+  | 'auth.signUp'
+  | 'auth.name'
+  | 'auth.email'
+  | 'auth.password'
+  | 'auth.passwordHint'
+  | 'auth.noAccount'
+  | 'auth.hasAccount'
+  | 'auth.loginSubtitle'
+  | 'auth.registerSubtitle'
+  | 'auth.welcomeBack'
+  | 'auth.welcome'
+  | 'auth.invalidCredentials'
+  | 'auth.errorRequired'
+  | 'auth.errorGeneric'
+  | 'auth.weakPassword'
+  | 'auth.passwordStrength'
+  | 'auth.strength.weak'
+  | 'auth.strength.fair'
+  | 'auth.strength.strong'
   | 'dashboard.greeting.morning'
   | 'dashboard.greeting.afternoon'
   | 'dashboard.greeting.evening'
@@ -124,6 +145,27 @@ const es: Record<TranslationKey, string> = {
   'nav.lightMode': 'Modo claro',
   'nav.darkMode': 'Modo oscuro',
   'nav.more': 'Más',
+  'nav.logout': 'Cerrar sesión',
+  'auth.signIn': 'Iniciar Sesión',
+  'auth.signUp': 'Crear Cuenta',
+  'auth.name': 'Nombre (opcional)',
+  'auth.email': 'Email',
+  'auth.password': 'Contraseña',
+  'auth.passwordHint': 'Mínimo 6 caracteres',
+  'auth.noAccount': '¿No tienes cuenta? Regístrate',
+  'auth.hasAccount': '¿Ya tienes cuenta? Inicia sesión',
+  'auth.loginSubtitle': 'Inicia sesión para continuar',
+  'auth.registerSubtitle': 'Crea tu cuenta para empezar',
+  'auth.welcomeBack': '¡Bienvenido de nuevo!',
+  'auth.welcome': '¡Bienvenido a FinZen!',
+  'auth.invalidCredentials': 'Email o contraseña inválidos',
+  'auth.errorRequired': 'Email y contraseña son obligatorios',
+  'auth.errorGeneric': 'Algo salió mal. Intenta de nuevo.',
+  'auth.weakPassword': 'Contraseña muy corta (mínimo 6 caracteres)',
+  'auth.passwordStrength': 'Fortaleza',
+  'auth.strength.weak': 'Débil',
+  'auth.strength.fair': 'Aceptable',
+  'auth.strength.strong': 'Fuerte',
   'dashboard.greeting.morning': 'Buenos días',
   'dashboard.greeting.afternoon': 'Buenas tardes',
   'dashboard.greeting.evening': 'Buenas noches',
@@ -236,6 +278,27 @@ const en: Record<TranslationKey, string> = {
   'nav.lightMode': 'Light mode',
   'nav.darkMode': 'Dark mode',
   'nav.more': 'More',
+  'nav.logout': 'Sign out',
+  'auth.signIn': 'Sign In',
+  'auth.signUp': 'Create Account',
+  'auth.name': 'Name (optional)',
+  'auth.email': 'Email',
+  'auth.password': 'Password',
+  'auth.passwordHint': 'At least 6 characters',
+  'auth.noAccount': "No account? Sign up",
+  'auth.hasAccount': 'Already have an account? Sign in',
+  'auth.loginSubtitle': 'Sign in to continue',
+  'auth.registerSubtitle': 'Create your account to get started',
+  'auth.welcomeBack': 'Welcome back!',
+  'auth.welcome': 'Welcome to FinZen!',
+  'auth.invalidCredentials': 'Invalid email or password',
+  'auth.errorRequired': 'Email and password are required',
+  'auth.errorGeneric': 'Something went wrong. Please try again.',
+  'auth.weakPassword': 'Password too short (min 6 characters)',
+  'auth.passwordStrength': 'Strength',
+  'auth.strength.weak': 'Weak',
+  'auth.strength.fair': 'Fair',
+  'auth.strength.strong': 'Strong',
   'dashboard.greeting.morning': 'Good morning',
   'dashboard.greeting.afternoon': 'Good afternoon',
   'dashboard.greeting.evening': 'Good evening',

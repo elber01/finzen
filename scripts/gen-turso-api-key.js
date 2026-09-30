@@ -7,8 +7,8 @@
  * and prints the raw key so we can use it for curl tests.
  */
 
-const { createClient } = require('@libsql/client');
-const crypto = require('crypto');
+import { createClient } from '@libsql/client';
+import crypto from 'crypto';
 
 const TURSO_URL = process.env.TURSO_URL; // [security] siempre por env — nunca hardcodear la URL
 const TURSO_TOKEN = process.env.TURSO_TOKEN;

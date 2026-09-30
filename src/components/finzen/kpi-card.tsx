@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { TrendingUp, TrendingDown } from 'lucide-react';
@@ -10,6 +11,8 @@ interface KpiCardProps {
   amount: string;
   delta?: string;
   deltaDirection?: 'up' | 'down' | 'neutral';
+  /** Tono semántico del delta, independiente de la flecha: gasto subiendo = flecha up + tono negative */
+  deltaTone?: 'positive' | 'negative' | 'neutral';
   className?: string;
   size?: 'default' | 'hero';
   sparkData?: number[];
@@ -23,6 +26,7 @@ export function KpiCard({
   amount,
   delta,
   deltaDirection = 'neutral',
+  deltaTone = 'neutral',
   className,
   size = 'default',
   sparkData,
@@ -30,6 +34,7 @@ export function KpiCard({
   suffix,
   variant = 'default',
 }: KpiCardProps) {
+  const sparkId = `spark-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const isGradient = variant === 'gradient';
   const colorVar =
     isGradient
@@ -74,9 +79,11 @@ export function KpiCard({
                 'text-xs font-semibold flex items-center gap-0.5 rounded-full px-1.5 py-0.5',
                 isGradient
                   ? 'bg-white/15 text-white'
-                  : deltaDirection === 'up'
+                  : deltaTone === 'positive'
                   ? 'text-income bg-income-soft/60'
-                  : 'text-expense bg-expense-soft/60'
+                  : deltaTone === 'negative'
+                  ? 'text-expense bg-expense-soft/60'
+                  : 'text-muted-foreground bg-surface-2'
               )}
             >
               {deltaDirection === 'up' ? (
@@ -109,7 +116,7 @@ export function KpiCard({
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sparkData.map((v, i) => ({ i, v }))}>
                 <defs>
-                  <linearGradient id={`spark-${label}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={colorVar} stopOpacity={isGradient ? 0.45 : 0.3} />
                     <stop offset="100%" stopColor={colorVar} stopOpacity={0} />
                   </linearGradient>
@@ -119,7 +126,7 @@ export function KpiCard({
                   dataKey="v"
                   stroke={colorVar}
                   strokeWidth={2}
-                  fill={`url(#spark-${label})`}
+                  fill={`url(#${sparkId})`}
                 />
               </AreaChart>
             </ResponsiveContainer>

@@ -10,8 +10,8 @@
  *   TURSO_URL="libsql://..." TURSO_TOKEN="eyJ..." node scripts/migrate-sqlite-to-turso.js
  */
 
-const { createClient } = require('@libsql/client');
-const { PrismaClient } = require('@prisma/client');
+import { createClient } from '@libsql/client';
+import { PrismaClient } from '@prisma/client';
 
 const SANDBOX_DB = '/home/z/my-project/db/custom.db';
 const TURSO_URL = process.env.TURSO_URL; // [security] siempre por env — nunca hardcodear la URL
@@ -32,8 +32,8 @@ const sandbox = new PrismaClient({
 });
 
 // Load schema.sql for DDL
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 const schemaSql = fs.readFileSync(
   path.join('/home/z/my-project', 'db/schema.sql'),
   'utf-8'

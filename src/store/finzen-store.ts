@@ -15,6 +15,9 @@ export type ViewKey =
 export type TransactionType = 'income' | 'expense' | 'transfer' | 'adjustment';
 
 // Types matching the database schema
+// NOTE: `loadData` asigna JSON crudo de la API (any), por eso estos
+// interfaces son la frontera de tipos del cliente — mantenerlos
+// sincronizados con prisma/schema.prisma.
 export interface Category {
   id: string;
   name: string;
@@ -23,6 +26,8 @@ export interface Category {
   icon: string | null;
   color: string | null;
   direction: string;
+  isSystem: boolean;
+  sortOrder: number;
 }
 
 export interface Account {
@@ -30,7 +35,7 @@ export interface Account {
   name: string;
   accountType: string;
   subType: string | null;
-  currency: string;
+  currency: CurrencyCode;
   currentBalance: number;
   institution: string | null;
   lastFour: string | null;
@@ -38,9 +43,9 @@ export interface Account {
 
 export interface Transaction {
   id: string;
-  type: string;
+  type: TransactionType;
   amount: number;
-  currency: string;
+  currency: CurrencyCode;
   fromAccountId: string;
   toAccountId: string;
   categoryId: string | null;

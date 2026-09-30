@@ -26,7 +26,6 @@ type DateFilter = 'this_month' | 'last_month' | 'this_quarter' | 'this_year' | '
 
 export function TransactionsView() {
   const { transactions, categories, accounts, locale, baseCurrency, setAddSheetOpen, setEditingTransactionId } = useFinZenStore();
-  const members = [{ id: 'me', displayName: 'Me', avatarColor: '#1E3A5F' }];
   const t = translations[locale];
 
   function handleEditTx(id: string) {
@@ -38,7 +37,6 @@ export function TransactionsView() {
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [specificMonth, setSpecificMonth] = useState<string>(''); // YYYY-MM format
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [memberFilter, setMemberFilter] = useState<string>('all');
   const [accountFilter, setAccountFilter] = useState<string>('all');
 
   const filtered = useMemo(() => {
@@ -81,16 +79,14 @@ export function TransactionsView() {
         }
         // Category
         if (categoryFilter !== 'all' && tx.categoryId !== categoryFilter) return false;
-        // Member
-        if (memberFilter !== 'all' && tx.memberId !== memberFilter) return false;
         // Account
         if (accountFilter !== 'all' && tx.fromAccountId !== accountFilter && tx.toAccountId !== accountFilter) return false;
         // Search
-        if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false;
+        if (search && !(tx.description ?? '').toLowerCase().includes(search.toLowerCase())) return false;
         return true;
       })
       .sort((a, b) => new Date(b.occurredOn).getTime() - new Date(a.occurredOn).getTime());
-  }, [transactions, dateFilter, specificMonth, categoryFilter, memberFilter, accountFilter, search]);
+  }, [transactions, dateFilter, specificMonth, categoryFilter, accountFilter, search]);
 
   // Group by day
   const grouped = useMemo(() => {
@@ -199,7 +195,7 @@ export function TransactionsView() {
             className="pl-9 h-10"
           />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 *:min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 *:min-w-0">
           <Select value={dateFilter} onValueChange={(v) => setDateFilter(v as DateFilter)}>
             <SelectTrigger className="h-9 text-xs w-full">
               <SelectValue />
@@ -232,19 +228,6 @@ export function TransactionsView() {
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.icon} {locale === 'es' ? (c.nameEs || c.name) : (c.nameEn || c.name)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={memberFilter} onValueChange={setMemberFilter}>
-            <SelectTrigger className="h-9 text-xs w-full">
-              <SelectValue placeholder={t['transactions.allMembers']} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t['transactions.allMembers']}</SelectItem>
-              {members.map((m) => (
-                <SelectItem key={m.id} value={m.id}>
-                  {m.displayName}
                 </SelectItem>
               ))}
             </SelectContent>

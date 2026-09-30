@@ -23,7 +23,12 @@ import {
   formatMoney,
   type CurrencyCode,
 } from '@/lib/finzen/currency';
-import { computeNetWorth } from '@/lib/finzen/finance';
+import {
+  computeNetWorth,
+  computeMonthlyFlows,
+  computeNetWorthHistory,
+  computeDelta,
+} from '@/lib/finzen/finance';
 import { KpiCard } from '@/components/finzen/kpi-card';
 import { TransactionRow } from '@/components/finzen/transaction-row';
 import { useAlerts } from '@/hooks/use-alerts';
@@ -46,6 +51,9 @@ export function DashboardView() {
   const viewDate = selectedMonth
     ? new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]) - 1, 1)
     : new Date();
+  // Primitivos derivados — deps estables para los memos de abajo
+  const viewYear = viewDate.getFullYear();
+  const viewMonth = viewDate.getMonth();
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -54,25 +62,25 @@ export function DashboardView() {
     return t['dashboard.greeting.evening'];
   }, [t]);
 
-  // ── Compute KPIs (selected month, in base currency)
-  const monthTransactions = transactions.filter((tx) => {
-    const d = new Date(tx.occurredOn);
-    return d.getMonth() === viewDate.getMonth() && d.getFullYear() === viewDate.getFullYear();
-  });
-
-  const totals = useMemo(() => {
-    let income = 0;
-    let expenses = 0;
-    for (const tx of monthTransactions) {
-      const converted = convertAmount(tx.amount, tx.currency, baseCurrency);
-      if (tx.type === 'income') income += converted;
-      else if (tx.type === 'expense') expenses += converted;
-    }
-    const savings = income - expenses;
-    const ratio = income > 0 ? (savings / income) * 100 : 0;
-    return { income, expenses, savings, ratio };
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [monthTransactions, baseCurrency]);
+  // ── KPIs del mes seleccionado (en moneda base) + mes anterior para deltas reales
+  const { totals, prevTotals } = useMemo(() => {
+    const sum = (year: number, month: number) => {
+      let income = 0;
+      let expenses = 0;
+      for (const tx of transactions) {
+        const d = new Date(tx.occurredOn);
+        if (d.getMonth() !== month || d.getFullYear() !== year) continue;
+        const v = convertAmount(tx.amount, tx.currency, baseCurrency);
+        if (tx.type === 'income') income += v;
+        else if (tx.type === 'expense') expenses += v;
+      }
+      const savings = income - expenses;
+      const ratio = income > 0 ? (savings / income) * 100 : 0;
+      return { income, expenses, savings, ratio };
+    };
+    return { totals: sum(viewYear, viewMonth), prevTotals: sum(viewYear, viewMonth - 1) };
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- viewDate deriva de new Date() (impuro), el compiler no puede preservar
+  }, [transactions, viewYear, viewMonth, baseCurrency]);
 
   // Net worth = sum of all account balances (converted to base currency)
   const netWorth = useMemo(
@@ -80,11 +88,31 @@ export function DashboardView() {
     [accounts, baseCurrency]
   );
 
+  // ── Historia REAL del net worth (12 meses): reconstruida hacia atrás desde el
+  // valor actual restando los flujos netos de cada mes. Sin placeholders.
+  // Siempre relativa al mes actual — el monto del hero es el net worth ACTUAL.
+  const netWorthHistory = useMemo(() => {
+    const now = new Date();
+    const flows = computeMonthlyFlows(transactions, baseCurrency, 12, now.getFullYear(), now.getMonth());
+    return computeNetWorthHistory(netWorth, flows);
+  }, [transactions, baseCurrency, netWorth]);
+
+  const netWorthDelta = computeDelta(netWorthHistory[11], netWorthHistory[10]);
+
+  // ── Deltas reales mes-vs-mes-anterior (undefined si no hay base de comparación)
+  const incomeDelta = computeDelta(totals.income, prevTotals.income);
+  const expensesDelta = computeDelta(totals.expenses, prevTotals.expenses);
+  const ratioDelta = computeDelta(totals.ratio, prevTotals.ratio);
+  const formatDelta = (d: number | undefined) =>
+    d === undefined ? undefined : `${d >= 0 ? '+' : ''}${Math.abs(d) < 10 ? d.toFixed(1) : Math.round(d)}%`;
+
   // ── Expense distribution by category (this month, in base currency)
   const categoryBreakdown = useMemo(() => {
     const map = new Map<string, number>();
-    for (const tx of monthTransactions) {
+    for (const tx of transactions) {
       if (tx.type !== 'expense' || !tx.categoryId) continue;
+      const d = new Date(tx.occurredOn);
+      if (d.getMonth() !== viewMonth || d.getFullYear() !== viewYear) continue;
       const converted = convertAmount(tx.amount, tx.currency, baseCurrency);
       map.set(tx.categoryId, (map.get(tx.categoryId) ?? 0) + converted);
     }
@@ -100,19 +128,17 @@ export function DashboardView() {
       })
       .sort((a, b) => b.value - a.value);
     return result;
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  }, [monthTransactions, categories, baseCurrency, locale]);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- idem: deps derivan de new Date()
+  }, [transactions, viewYear, viewMonth, categories, baseCurrency, locale]);
 
   // ── Cash flow chart data — 12 meses (6 en móvil), computed from real transactions
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const cashFlowData = useMemo(() => {
     const baseCur = baseCurrency as CurrencyCode;
-    const now = viewDate;
     const intlLocale = locale === 'es' ? 'es-DO' : 'en-US';
     const monthsBack = isMobile ? 6 : 12;
     const months: { key: string; label: string }[] = [];
     for (let i = monthsBack - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(viewYear, viewMonth - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = new Intl.DateTimeFormat(intlLocale, { month: 'short' }).format(d);
       months.push({ key, label });
@@ -130,7 +156,8 @@ export function DashboardView() {
       }
       return { month: label, income, expenses };
     });
-  }, [transactions, baseCurrency, locale, isMobile]);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- idem: deps derivan de new Date()
+  }, [transactions, viewYear, viewMonth, baseCurrency, locale, isMobile]);
 
   // ── Recent transactions (top 5)
   const recent = [...transactions]
@@ -217,39 +244,50 @@ export function DashboardView() {
         </Card>
       ) : (
         <>
-          {/* Hero: Net Worth — variante gradiente (look fintech moderno) */}
+          {/* Hero: Net Worth — variante gradiente, sparkline con historia real de 12 meses */}
           <KpiCard
             label={t['dashboard.netWorth']}
             amount={formatMoney(netWorth, baseCurrency, locale)}
-            delta={netWorth > 0 ? '+0%' : undefined}
-            deltaDirection={netWorth > 0 ? 'up' : 'neutral'}
+            delta={formatDelta(netWorthDelta)}
+            deltaDirection={
+              netWorthDelta === undefined
+                ? 'neutral'
+                : netWorthDelta >= 0
+                ? 'up'
+                : 'down'
+            }
+            deltaTone={netWorthDelta === undefined || netWorthDelta >= 0 ? 'positive' : 'negative'}
             size="hero"
-            sparkData={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, netWorth]}
+            sparkData={transactions.length > 0 ? netWorthHistory : undefined}
             color="primary"
             variant="gradient"
           />
 
-          {/* Three KPI cards */}
+          {/* Three KPI cards — deltas reales vs mes anterior */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <KpiCard
               label={t['dashboard.income']}
               amount={formatMoney(totals.income, baseCurrency, locale)}
-              delta={totals.income > 0 ? '+0%' : undefined}
-              deltaDirection={totals.income > 0 ? 'up' : 'neutral'}
+              delta={formatDelta(incomeDelta)}
+              deltaDirection={incomeDelta === undefined ? 'neutral' : incomeDelta >= 0 ? 'up' : 'down'}
+              deltaTone={incomeDelta === undefined ? 'neutral' : incomeDelta >= 0 ? 'positive' : 'negative'}
               color="income"
             />
             <KpiCard
               label={t['dashboard.expenses']}
               amount={formatMoney(totals.expenses, baseCurrency, locale)}
-              delta={totals.expenses > 0 ? '0%' : undefined}
-              deltaDirection="neutral"
+              delta={formatDelta(expensesDelta)}
+              deltaDirection={expensesDelta === undefined ? 'neutral' : expensesDelta >= 0 ? 'up' : 'down'}
+              // Gastar más = flecha arriba pero tono negativo
+              deltaTone={expensesDelta === undefined ? 'neutral' : expensesDelta >= 0 ? 'negative' : 'positive'}
               color="expense"
             />
             <KpiCard
               label={t['dashboard.savingsRatio']}
               amount={`${totals.ratio.toFixed(1)}%`}
-              delta={totals.ratio > 0 ? '+0%' : undefined}
-              deltaDirection={totals.ratio > 0 ? 'up' : 'neutral'}
+              delta={formatDelta(ratioDelta)}
+              deltaDirection={ratioDelta === undefined ? 'neutral' : ratioDelta >= 0 ? 'up' : 'down'}
+              deltaTone={ratioDelta === undefined ? 'neutral' : ratioDelta >= 0 ? 'positive' : 'negative'}
               color="income"
               suffix={t['dashboard.savingsTarget']}
             />
@@ -389,7 +427,7 @@ export function DashboardView() {
                       alert.severity === 'critical'
                         ? AlertTriangle
                         : alert.type === 'cash_flow_forecast'
-                        ? (alert.severity === 'critical' ? TrendingDown : TrendingUp)
+                        ? TrendingUp
                         : alert.type === 'expense_spike'
                         ? TrendingUp
                         : Lightbulb;

@@ -13,8 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Languages,
+  LogOut,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useFinZenStore, type ViewKey } from '@/store/finzen-store';
@@ -33,9 +35,15 @@ const NAV_ITEMS: { view: ViewKey; icon: typeof LayoutDashboard; key: Translation
 export function Sidebar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { data: session } = useSession();
   const { activeView, setActiveView, sidebarCollapsed, toggleSidebar, locale, setLocale } =
     useFinZenStore();
   const t = translations[locale];
+
+  // Datos reales de sesión — nada de placeholders
+  const userName = session?.user?.name || session?.user?.email || '—';
+  const userEmail = session?.user?.email || '';
+  const userInitial = userName.charAt(0).toUpperCase() || 'U';
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
@@ -66,20 +74,16 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Household switcher */}
-      {!sidebarCollapsed && (
+      {/* Session info — datos reales de la sesión activa */}
+      {!sidebarCollapsed && session?.user && (
         <div className="p-3 border-b border-border">
           <div className="px-3 py-2 rounded-md bg-surface-2 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-semibold text-sm">
-              M
+            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
+              {userInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">
-                {locale === 'es' ? 'Mi Hogar' : 'My Household'}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {locale === 'es' ? '1 miembro' : '1 member'}
-              </div>
+              <div className="text-sm font-medium truncate">{userName}</div>
+              <div className="text-xs text-muted-foreground truncate">{userEmail}</div>
             </div>
           </div>
         </div>
@@ -148,24 +152,18 @@ export function Sidebar() {
           )}
         </button>
 
-        <div
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
           className={cn(
-            'flex items-center gap-2 px-3 py-2 rounded-md hover:bg-surface-2',
+            'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-expense-soft hover:text-expense transition-colors',
             sidebarCollapsed && 'justify-center'
           )}
+          aria-label={t['nav.logout']}
+          title={sidebarCollapsed ? t['nav.logout'] : undefined}
         >
-          <div className="w-8 h-8 rounded-full bg-expense/15 flex items-center justify-center text-expense font-semibold text-sm shrink-0">
-            M
-          </div>
-          {!sidebarCollapsed && (
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">
-                {locale === 'es' ? 'Mi Perfil' : 'My Profile'}
-              </div>
-              <div className="text-xs text-muted-foreground truncate">—</div>
-            </div>
-          )}
-        </div>
+          <LogOut className="w-5 h-5 shrink-0" />
+          {!sidebarCollapsed && <span>{t['nav.logout']}</span>}
+        </button>
       </div>
     </aside>
   );

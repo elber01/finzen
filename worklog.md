@@ -5514,3 +5514,93 @@ New format:
 **Response shape for `account_source`**: every POST/PATCH response includes an `account_source` field (`"account_id"` | `"account"` | `"default"`) so external integrations can verify which account was used. If the user passes a wrong `account_id`, the API returns 422 instead of silently using the default.
 
 **Files added/modified in this phase**: 6 files (2 modified, 4 new). All changes are deployed and live on Vercel.
+
+---
+
+## PHASE 8.0 — Estabilización, UX con datos reales y documentación sostenible
+
+**Task ID:** 8.0
+**Agent:** opencode (z-ai/glm-5.3)
+**Date:** 29-sep-2026
+**Status:** ✅ Delivered — `lint` ✓ `typecheck` ✓ `build` ✓ smoke test dev ✓
+
+### Problema de partida
+
+La app funcionaba en producción pero `tsc --noEmit` reportaba **28 errores** y
+`bun run lint` otros **21** (solo en `scripts/`). Además existía deuda UX con
+datos decorativos falsos (deltas "+0%", sparkline del net worth inventado,
+sesión "Mi Perfil —") y NO existía `AGENTS.md`/`MEMORY.md`.
+
+### Diagnóstico raíz de los errores de tipos
+
+| Error | Causa | Fix |
+|---|---|---|
+| `session.user.id` no existe (9 errores) | No había module augmentation de NextAuth | Creado `src/types/next-auth.d.ts` |
+| `string` ≠ `CurrencyCode` (12 errores) | Interfaces del store tipaban `currency: string` | Store tipado con `CurrencyCode`/`TransactionType` |
+| `c.isSystem` no existe | Interface `Category` desincronizada del schema | Añadidos `isSystem` + `sortOrder` |
+| `tx.memberId` (código muerto) | Filtro de miembros de un feature inexistente | Eliminado filtro + UI del selector |
+| `tx.description` possibly null | Null-safety | `(tx.description ?? '')` |
+| Claves duplicadas `date-utils.ts` | `'entretenimiento'` ×2 en el mismo literal | Duplicado eliminado |
+| Comparación imposible `dashboard-view` | Ternario anidado `severity === 'critical'` tras ya haberlo chequeado | Simplificado |
+| `examples/websocket` no compila | socket.io no instalado (demo del template) | Excluido del tsconfig |
+| 21 errores lint `require()` | scripts/*.js en CJS | Convertidos a ESM |
+
+### Cambios de seguridad
+
+- `NEXTAUTH_SECRET`: el fallback hardcodeado pasó a ser **fail-fast en
+  producción** (`resolveAuthSecret()`), con excepción controlada para
+  `NEXT_PHASE=phase-production-build` (durante `next build` no se firman
+  sesiones). Fallback solo-dev con warning.
+- `.gitignore`: `*.apk`, `*.tar.gz`, `*.docx`, `download/` (binarios ajenos).
+- `.env` local regenerado (el sandbox lo pierde en reinicios).
+
+### UX/UI — datos reales, no decoración
+
+- **`finance.ts`**: nuevas funciones puras `computeMonthlyFlows`,
+  `computeNetWorthHistory` (reconstruye el net worth hacia atrás con flujos
+  reales) y `computeDelta` (devuelve `undefined` sin base de comparación).
+- **Dashboard**: deltas reales mes-vs-mes-anterior en los 4 KPIs; sparkline del
+  net worth con historia real de 12 meses; tono semántico del delta
+  independiente de la flecha (gasto subiendo = flecha ↑ pero color rojo).
+- **KpiCard**: nuevo prop `deltaTone` + `useId()` para IDs de gradientes únicos.
+- **Sidebar**: sesión real (nombre, email, inicial dinámica) + botón logout.
+  "Mi Hogar" fake eliminado. Logout también en el sheet "Más" del móvil.
+- **AuthForm**: i18n completo (19 claves nuevas es/en), medidor de fortaleza de
+  contraseña, toggle de idioma pre-login, autocomplete correcto
+  (`new-password`/`current-password`).
+- **Shell**: `ViewTransition` (framer-motion) entre vistas + skip-to-content.
+- Memos de dashboard reestructurados con deps primitivas estables
+  (`viewYear`/`viewMonth`), disables de React Compiler solo donde aplica.
+
+### Documentación sostenible (nueva)
+
+- **`AGENTS.md`**: reglas operativas para agentes IA/desarrolladores — stack,
+  comandos, arquitectura double-entry, convenciones UI/seguridad, checklist
+  de verificación obligatoria, qué NO hacer.
+- **`MEMORY.md`**: memoria viva — cronología condensada, decisiones de
+  arquitectura con su porqué, estado actual, deuda técnica priorizada,
+  lecciones aprendidas.
+- **`README.md`**: punteros a ambos, script `typecheck`, fail-fast de
+  NEXTAUTH_SECRET documentado, tabla completa de la API v1.
+
+### Archivos creados/modificados
+
+| Archivo | Cambio |
+|---|---|
+| `AGENTS.md`, `MEMORY.md` | **Nuevos** — documentación operativa |
+| `src/types/next-auth.d.ts` | **Nuevo** — augmentación de tipos NextAuth |
+| `src/components/finzen/view-transition.tsx` | **Nuevo** — transición de vistas |
+| `src/lib/finzen/finance.ts` | +`computeMonthlyFlows`, `computeNetWorthHistory`, `computeDelta` |
+| `src/lib/finzen/i18n.ts` | +20 claves (nav.logout, auth.*) |
+| `src/store/finzen-store.ts` | Interfaces tipados estrictos |
+| `src/lib/auth/auth-options.ts` | Fail-fast prod del secret |
+| `src/components/finzen/{dashboard-view,kpi-card,sidebar,bottom-tab-bar,transactions-view,categories-manager}.tsx` | UX real + cleanups |
+| `src/components/auth/auth-form.tsx` | i18n + fortaleza + a11y |
+| `src/components/finzen/app-shell.tsx` | VIEWS registry + transiciones + skip-link |
+| `scripts/*.js` (12 archivos) | CJS → ESM |
+| `tsconfig.json`, `.gitignore`, `package.json`, `README.md` | Exclusión examples, binarios, script typecheck, docs |
+
+### Deuda pendiente (ver MEMORY.md §5)
+
+Cero tests automatizados (recomendado Vitest + Playwright), FX estáticas,
+secreto antiguo en historial de git (rotar en Vercel), repoint de dominio.

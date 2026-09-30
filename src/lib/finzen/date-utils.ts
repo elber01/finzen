@@ -146,9 +146,8 @@ export const CATEGORY_ALIASES: Record<string, string> = {
   'gasolina': 'Transport', 'combustible': 'Transport', 'gas': 'Transport',
   'uber': 'Transport', 'taxi': 'Transport', 'bus': 'Transport',
   // Leisure
-  'ocio': 'Leisure', 'entretenimiento': 'Leisure', 'entretenimiento': 'Leisure',
+  'ocio': 'Leisure', 'entretenimiento': 'Leisure',
   'cine': 'Leisure', 'peliculas': 'Leisure', 'movies': 'Leisure',
-  'entretenimiento': 'Leisure',
   // Utilities
   'servicios': 'Utilities', 'utilities': 'Utilities',
   'luz': 'Utilities', 'electricidad': 'Utilities', 'electric': 'Utilities',

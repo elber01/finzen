@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const crypto = require('crypto');
+import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 const db = new PrismaClient({ datasources: { db: { url: 'file:/home/z/my-project/db/custom.db' } } });
 (async () => {
   const userId = 'cmqzzpg1c000rsrtmghrxldl7';

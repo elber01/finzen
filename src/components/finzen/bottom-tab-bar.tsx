@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Receipt, Plus, BarChart3, Settings, Wallet, PieChart, FileUp, Menu } from 'lucide-react';
+import { Home, Receipt, Plus, BarChart3, Settings, Wallet, PieChart, FileUp, Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFinZenStore, type ViewKey } from '@/store/finzen-store';
 import { translations } from '@/lib/finzen/i18n';
@@ -8,6 +8,8 @@ import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { signOut } from 'next-auth/react';
+import { Separator } from '@/components/ui/separator';
 
 type TabKey = 'nav.dashboard' | 'nav.transactions' | 'nav.reports' | 'nav.settings' | 'nav.accounts' | 'nav.budgets' | 'nav.import' | 'nav.more';
 
@@ -138,6 +140,17 @@ export function BottomTabBar() {
               );
             })}
           </div>
+          <Separator className="my-3" />
+          <button
+            onClick={() => {
+              setMoreOpen(false);
+              signOut({ callbackUrl: '/login' });
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-expense hover:bg-expense-soft transition-colors active:scale-[0.98]"
+          >
+            <LogOut className="w-4 h-4" />
+            {t['nav.logout']}
+          </button>
         </SheetContent>
       </Sheet>
     </>

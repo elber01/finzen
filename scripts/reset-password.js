@@ -5,9 +5,11 @@
  * Run: node scripts/reset-password.js
  */
 
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
-const db = new PrismaClient({ datasources: { db: { url: 'file:/home/z/my-project/db/custom.db' } } });
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { join } from 'path';
+// BD local de dev — independiente de DATABASE_URL (este script es solo para dev)
+const db = new PrismaClient({ datasources: { db: { url: join(process.cwd(), 'db/custom.db') } } });
 
 (async () => {
   const email = process.env.SEED_EMAIL || 'hamilton.edwin@gmail.com';

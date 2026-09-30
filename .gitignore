@@ -36,3 +36,10 @@ Thumbs.db
 
 # Basura de herramientas
 tool-results/
+
+# Binarios / instaladores ajenos al proyecto (no pertenecen al repo)
+*.apk
+*.tar.gz
+*.docx
+anydesk-*/
+download/
