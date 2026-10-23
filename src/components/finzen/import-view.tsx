@@ -12,15 +12,11 @@ import { useFinZenStore } from '@/store/finzen-store';
 import { translations } from '@/lib/finzen/i18n';
 import { CURRENCIES, type CurrencyCode } from '@/lib/finzen/currency';
 import { parseLocalDate, toLocalDateString, toStorageISOString, matchCategory } from '@/lib/finzen/date-utils';
+import { parseCSVLine } from '@/lib/finzen/csv';
 import { OcrFlow } from '@/components/finzen/ocr-flow';
-import { Building2 } from 'lucide-react';
+import { BankImportFlow } from '@/components/finzen/bank-import-flow';
 import type { Transaction } from '@/store/finzen-store';
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = []; let cur = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) { const ch = line[i]; if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; } else if (ch === ',' && !inQ) { result.push(cur); cur = ''; } else cur += ch; }
-  result.push(cur); return result.map(s => s.trim());
-}
 type Step = 'upload' | 'mapping' | 'done';
 
 export function ImportView() {
@@ -74,7 +70,8 @@ export function ImportView() {
     const existingTxKeys = new Set<string>();
     store.transactions.forEach(tx => {
       const datePart = tx.occurredOn.split('T')[0];
-      const key = `${datePart}|${tx.amount}|${(tx.description || '').toLowerCase().trim()}|${tx.fromAccountId}`;
+      const realAccountId = tx.type === 'income' ? tx.toAccountId : tx.fromAccountId;
+      const key = `${datePart}|${tx.amount}|${(tx.description || '').toLowerCase().trim()}|${realAccountId}`;
       existingTxKeys.add(key);
     });
     for (const row of allRows) {
@@ -135,13 +132,7 @@ export function ImportView() {
           <div className="flex gap-1.5 mt-3"><span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-surface-2">CSV</span><span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-surface-2">XLSX</span></div>
         </Card>
         <OcrFlow onOpenChange={() => {}} />
-        <Card className="p-5 cursor-pointer hover:border-primary/40 transition-colors relative" onClick={() => toast.info(locale === 'es' ? 'Plaid — próximamente' : 'Plaid — coming soon')}>
-          <span className="absolute top-3 right-3 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-2 text-muted-foreground">
-            {locale === 'es' ? 'Próximamente' : 'Soon'}
-          </span>
-          <div className="w-12 h-12 rounded-xl bg-income/10 flex items-center justify-center mb-3"><Building2 className="w-6 h-6 text-income" /></div>
-          <div className="text-base font-semibold">{t['import.bank']}</div><div className="text-xs text-muted-foreground mt-1">{t['import.bankDesc']}</div>
-        </Card>
+        <BankImportFlow />
       </div>
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-3"><Download className="w-4 h-4 text-muted-foreground" /><h2 className="text-lg font-semibold">{locale === 'es' ? 'Exportar datos' : 'Export data'}</h2></div>

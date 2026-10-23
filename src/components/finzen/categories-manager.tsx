@@ -58,6 +58,9 @@ export function CategoriesManager() {
     return (
       <div className="space-y-1">
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 pb-1">{title}</h4>
+        {cats.length === 0 && (
+          <p className="text-xs text-muted-foreground px-1 py-3">{locale === 'es' ? 'Sin categorías aún — pulsa «Nueva» para crear la primera.' : 'No categories yet — press "New" to create the first one.'}</p>
+        )}
         {cats.map(c => (
           <div key={c.id} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: `${c.color ?? '#6B7280'}20`, color: c.color ?? undefined }}>

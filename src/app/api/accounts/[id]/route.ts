@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/auth-options';
 import { db } from '@/lib/db';
+import { deleteAccountForUser } from '@/lib/services/accounts-service';
 
 export async function PATCH(
   req: Request,
@@ -50,17 +51,18 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const existing = await db.account.findFirst({
-    where: { id, userId: session.user.id },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Delegate to the service layer — refuses to delete accounts with linked
+  // transactions (409) to preserve the double-entry history.
+  const result = await deleteAccountForUser(session.user.id, id);
+  if (!result.ok) {
+    if (result.code === 'not_found') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    return NextResponse.json(
+      { error: result.message, code: result.code, transactionCount: result.transactionCount },
+      { status: 409 }
+    );
   }
-
-  await db.account.delete({
-    where: { id },
-  });
 
   return NextResponse.json({ success: true });
 }

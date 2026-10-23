@@ -50,6 +50,7 @@ export function KpiCard({
   return (
     <Card
       className={cn(
+        'shadow-card',
         'relative overflow-hidden border-border/60',
         size === 'hero' ? 'p-6' : 'p-4',
         isGradient &&

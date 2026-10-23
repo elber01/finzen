@@ -49,6 +49,8 @@
   --color-info: var(--info);
   --color-btc: var(--btc);
   --color-usdt: var(--usdt);
+  --color-primary-hover: var(--primary-hover);
+  --shadow-card: 0 1px 2px rgba(0, 39, 74, 0.06), 0 4px 12px rgba(0, 39, 74, 0.08);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -64,6 +66,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.27 0.08 250);           /* navy #1E3A5F */
+  --primary-hover: color-mix(in oklab, var(--primary) 92%, black);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -110,6 +113,7 @@
   --popover: oklch(0.18 0.015 250);
   --popover-foreground: oklch(0.96 0 0);
   --primary: oklch(0.75 0.13 250);           /* lighter navy for contrast */
+  --primary-hover: color-mix(in oklab, var(--primary) 92%, black);
   --primary-foreground: oklch(0.13 0.01 250);
   --secondary: oklch(0.25 0.015 250);
   --secondary-foreground: oklch(0.96 0 0);

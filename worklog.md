@@ -5604,3 +5604,297 @@ sesión "Mi Perfil —") y NO existía `AGENTS.md`/`MEMORY.md`.
 
 Cero tests automatizados (recomendado Vitest + Playwright), FX estáticas,
 secreto antiguo en historial de git (rotar en Vercel), repoint de dominio.
+
+---
+
+## PHASE 8.2 — CRUD de cuentas v1 para el agente + flujo multiagente opencode
+
+**Task ID:** 8.2
+**Agent:** opencode (z-ai/glm-5.3) ejecutando el flujo multiagente — coordinador (principal) + implementador + revisor (subagentes vía Task)
+**Date:** 22-oct-2026 (disparador: hallazgo medido del dueño el 21-oct-2026)
+**Status:** ✅ Delivered — `bun run verify` ✓ · E2E accounts v1 **21/21** en dev ✓ · revisor: APRUEBA
+
+### Problema de partida
+
+El agente de Edwin (Grazia/Hermes) solo podía LEER cuentas: `GET /api/v1/accounts` 200,
+pero POST → 405, PATCH/DELETE → 404 (rutas solo GET). El net worth no podía mantenerse
+sin intervención humana (saldos de préstamos/inversiones vienen del banco). Además:
+la estructura multiagentes (coordinador/planificador/implementador/revisor) no estaba
+cableada en opencode y no existía skill de UX/UI con metodología HIG.
+
+### Qué se entregó
+
+**API v1 (la key actual del agente sirve sin scope nuevo — permiso `write` existente):**
+- `POST /api/v1/accounts` → 201 `{ success, account }`. Payload: `name*`,
+  `accountType` asset|liability (def asset), `subType`
+  checking|savings|credit_card|cash|crypto_wallet|investment|loan (def checking,
+  alias `credit`→`credit_card`), `currency` DOP|USD (def DOP), `currentBalance`
+  finito (def 0; pasivo positivo = deuda), `institution`, `lastFour` (2-4 dígitos).
+- `PATCH /api/v1/accounts/:id` → 200. Campos seguros: `name`, `currentBalance`
+  (**ajuste directo**, sin recálculo desde transacciones — caso mensual AFI y
+  APAP a 0 en diciembre), `institution`, `lastFour`, `subType`.
+  `currency`/`accountType` → `422 field_not_editable` (protegen la semántica
+  del net worth). `404 not_found` si no es del usuario.
+- `DELETE /api/v1/accounts/:id` → `409 account_has_transactions` (+`transactionCount`)
+  si la cuenta tiene transacciones (`fromAccountId`/`toAccountId`); borrado físico
+  `200 { success, id, deleted: true }` si está limpia. **El historial nunca se pierde.**
+
+**Capa de servicios (Fase 1 del roadmap iniciada):** `src/lib/services/accounts-service.ts`
+— createAccountForUser/updateAccountForUser/deleteAccountForUser con validaciones y
+guard de transacciones. Consumido por las rutas v1 Y la interna `/api/accounts/[id]`
+(el DELETE de la UI también rechaza cuentas con historial → cierra la deuda SDD §7.7).
+
+**UI:** subtype `loan` en SUB_TYPE_META (Préstamo, icono Building2) para que las
+cuentas creadas por el agente se rendericen bien; diálogo de borrado honesto (explica
+la restricción y deshabilita la acción si hay transacciones); toasts con la causa real
+del servidor; `text-white` → `text-primary-foreground` en el botón destructivo
+(contraste dark mode sobre `bg-expense`).
+
+**Multiagentes opencode (aplicado a esta tarea y permanente):**
+- `.opencode/opencode.json`: default_agent `coordinador`, instructions AGENTS.md+agent.md.
+- `.opencode/agent/{coordinador,planificador,implementador,revisor}.md`: coordinador
+  (primary) orquesta y es el único que cierra; planificador y revisor read-only
+  (`edit: deny`); implementador codea + corre harness.
+- `.opencode/skills/finzen-dev-harness/SKILL.md`: ciclo SDD + barrera `bun run verify`.
+- `.opencode/skills/hig-ux-ui/SKILL.md`: Apple HIG (claridad/deferencia/profundidad)
+  mapeada a tokens reales, a11y (targets 44px, aria), i18n, estados vacíos/skeleton,
+  checklist por vista.
+- `agent.md` §4 reescrito al flujo de 4 roles; `package.json` + script `verify`.
+- **Esta fase se ejecutó con ese flujo**: plan aprobado por el dueño → implementador
+  (código + harness) → revisor (veredicto APRUEBA) → corrección del aviso de token →
+  E2E → memoria.
+
+**Spec primero:** SDD §2 (rutas+contratos), §3 (tools create/update/delete_account),
+§7.7 resuelto; `skills.md` alta tipada de las 3 skills; `agents/orchestrator.md`
+(delegación + directriz de mantenimiento de patrimonio); README (tabla API + verify).
+
+### Batería E2E (dev, SQLite local, 21/21)
+
+| # | Prueba | Resultado |
+|---|---|---|
+| 1 | GET lista (baseline) | ✅ 200 |
+| 2 | POST cuenta préstamo (liability/loan/DOP/48120.73) | ✅ 201 con echo de campos |
+| 3 | GET contiene la cuenta (subType loan, balance 48120.73) | ✅ |
+| 4 | PATCH currentBalance → 0 (caso APAP diciembre) | ✅ 200 |
+| 5 | PATCH rename | ✅ 200 |
+| 6-7 | PATCH currency/accountType (inmutables) | ✅ 422 field_not_editable ×2 |
+| 8 | PATCH id inexistente | ✅ 404 not_found |
+| 9-11 | POST invalid accountType/currency/sin name | ✅ 422 ×3 |
+| 12 | POST subType `credit` → normalizado a `credit_card` | ✅ 201 |
+| 13-14 | POST cuenta B + expense vinculado | ✅ 201 ×2 |
+| 15 | DELETE cuenta B con transacciones | ✅ 409 account_has_transactions (count 1) |
+| 16-17 | DELETE del expense → DELETE cuenta B | ✅ 200 ×2 |
+| 18-19 | DELETE cuentas A y credit | ✅ 200 ×2 |
+| 20 | GET lista == baseline (cleanup verificado) | ✅ |
+| 21 | GET sin API key | ✅ 401 |
+
+### Avisos del revisor (no bloqueantes, documentados)
+
+- `Number()` coerciona `true→1`/`null→0` en `currentBalance` (borde laxo, no viola
+  el contrato "finito"; consistente con el patrón de expenses v1).
+- Toasts de error mezclan es/en (los mensajes del servidor v1 son en inglés por
+  convención de la API).
+- El PATCH interno `/api/accounts/[id]` aún permite mutar `accountType`/`currency`
+  (divergencia de consistencia con el servicio v1; deuda de Fase 1).
+
+### Archivos creados/modificados
+
+| Archivo | Cambio |
+|---|---|
+| `src/lib/services/accounts-service.ts` | **Nuevo** — capa de negocio de cuentas + guard 409 |
+| `src/app/api/v1/accounts/route.ts` | + POST (GET intacto) |
+| `src/app/api/v1/accounts/[id]/route.ts` | **Nuevo** — PATCH + DELETE |
+| `src/app/api/accounts/[id]/route.ts` | DELETE delega al servicio (409 interno) |
+| `src/components/finzen/accounts-view.tsx` | loan subtype + diálogo/toasts honestos + token foreground |
+| `scripts/e2e-accounts-v1.js` | **Nuevo** — batería E2E 21 pasos con cleanup |
+| `package.json` | + script `verify` |
+| `agent.md` | §4 → flujo coordinador/planificador/implementador/revisor |
+| `.opencode/**` | **Nuevo** — config + 4 agentes + 2 skills |
+| `SDD.md`, `skills.md`, `agents/orchestrator.md`, `README.md`, `MEMORY.md` | Spec actualizada (spec primero) |
+
+### Pendiente tras deploy (criterio de cierre del dueño)
+
+Correr en producción: `bun scripts/e2e-accounts-v1.js --base https://finzen-zeta.vercel.app --key <key de Grazia>`
+→ 21/21 cierra el criterio: crear préstamo APAP RD$48,120.73 (201), PATCH del saldo a
+cualquier valor (200), GET muestra el cambio persistido, todo con la key actual.
+
+---
+
+## PHASE 8.3 — "Importar desde tu banco" (estados de cuenta CSV/OFX)
+
+**Task ID:** 8.3
+**Agent:** opencode (z-ai/glm-5.3) con flujo multiagente — coordinador + implementador + revisor (subagentes Task)
+**Date:** 22-oct-2026
+**Status:** ✅ Delivered — `bun run verify` ✓ · fixtures parsers 33/33 ✓ · revisor: APRUEBA
+
+### Problema de partida
+
+El módulo Importar tenía un card muerto: "Conectar Banco (Plaid) — próximamente"
+(import-view.tsx:138). Plaid real no es viable (requiere API keys propias y no
+soporta los bancos dominicanos de Edwin: BPD, APAP, AFI). Lo útil y honesto:
+importar los estados de cuenta que los bancos SÍ exportan (CSV u OFX/QFX).
+
+### Qué se entregó
+
+- **`src/lib/finzen/ofx.ts` (nuevo, parser puro):** `parseOfxStatement` —
+  OFX 1.x SGML y 2.x vía regex/split (sin DOM): `STMTTRN`, `DTPOSTED` validado,
+  `TRNAMT` con signo, `NAME · MEMO`, `FITID`, `CURDEF`, `ACCTID`; tolera tags
+  sin cerrar, BOM y CRLF.
+- **`src/lib/finzen/bank-presets.ts` (nuevo, puro):** `BankPreset` + 5 presets
+  (Banco Popular, Banreservas, BHD, APAP préstamos, genérico) con alias de
+  columnas en español; `normalizeHeader` (NFD, acentos); `parseBankAmount`
+  (coma decimal dominicana "1.234,56", punto "1,234.56", paréntesis "(500.00)",
+  "RD$", heurística por último separador); `autoMapColumns`.
+- **`src/lib/finzen/csv.ts` (nuevo):** `parseCSVLine` extraída de import-view
+  (un solo origen, sin duplicación).
+- **`src/components/finzen/bank-import-flow.tsx` (nuevo):** wizard Card+Dialog
+  al patrón de ocr-flow: 1) elegir banco (con hint de dónde exportar) →
+  2) subir CSV/OFX/QFX (detección de OFX por extensión/contenido; detección de
+  fila de header en las primeras 5 líneas para saltar títulos) → 3) mapeo
+  pre-relleno editable (Fecha*, Monto o Débito+Crédito, Descripción, Tipo) →
+  4) preview con chips de resumen (N, rango, ingresos/gastos con color
+  semántico, duplicados solo si >0, advertencia si la moneda del statement
+  OFX ≠ moneda de la cuenta destino) + tabla de 8 filas con formatMoney
+  tabular-nums + cuenta destino → 5) resultado. Commit con dedup
+  `date|amount|desc|realAccount`, `importSource: 'bank'`, tags
+  `bank_<banco>_<ts>`, moneda = la de la cuenta destino.
+- **i18n:** 14 claves nuevas `import.bank*` (es+en) + valores de
+  `import.bank`/`bankDesc` actualizados (adiós Plaid).
+- **import-view.tsx:** card muerto → `<BankImportFlow />`; usa `csv.ts`
+  compartida; resto intacto.
+
+### Fix de bug latente (encontrado por el implementador, corregido por el coordinador)
+
+El dedup del CSV wizard original construía las keys de transacciones
+existentes con `tx.fromAccountId` — pero en los INGRESOS la cuenta real está
+en `toAccountId` (double-entry), así que los ingresos importados jamás
+detectaban duplicados. Corregido con
+`realAccountId = tx.type === 'income' ? tx.toAccountId : tx.fromAccountId`
+en los 3 sitios: preview banco, commit banco y flujo CSV original.
+
+### Verificación
+
+- **Fixtures de parsers (bun, 33/33):** montos ('1.234,56', '1,234.56',
+  '(45,00)', 'RD$ 1.000,50', '-2.500,00', '0', 'abc'), acentos en headers,
+  header tras fila de título, OFX SGML con y sin closing tags, fecha inválida
+  descartada, CURDEF/ACCTID.
+- **Revisor:** APRUEBA. Avisos no bloqueantes: i18n inline y a11y de divs
+  clickeables (patrón preexistente del módulo → deuda MEMORY §5.9),
+  `x_undefined` en asientos sin categoría (MEMORY §5.10), advertencia de
+  moneda OFX≠cuenta (CORREGIDA por el coordinador antes del cierre).
+- `bun run lint` ✓ · `bun run typecheck` ✓ · `bun run build` ✓.
+
+### Archivos
+
+| Archivo | Cambio |
+|---|---|
+| `src/lib/finzen/ofx.ts` | **Nuevo** — parser OFX/QFX 1.x/2.x |
+| `src/lib/finzen/bank-presets.ts` | **Nuevo** — presets RD + parseBankAmount + autoMapColumns |
+| `src/lib/finzen/csv.ts` | **Nuevo** — parseCSVLine compartida |
+| `src/components/finzen/bank-import-flow.tsx` | **Nuevo** — wizard completo |
+| `src/components/finzen/import-view.tsx` | Card Plaid → BankImportFlow + csv.ts + fix dedup ingresos |
+| `src/lib/finzen/i18n.ts` | +14 claves import.bank* + valores Plaid reemplazados |
+| `skills.md`, `SDD.md` | Spec `import_bank_statement` (escrita antes del código) |
+
+---
+
+## PHASE 8.4 — Pass UI/HIG para producción (FIX 1-7 del dueño)
+
+**Task ID:** 8.4
+**Agent:** opencode (z-ai/glm-5.3) con flujo multiagente — coordinador + implementador + revisor (subagentes Task)
+**Date:** 22-oct-2026
+**Status:** ✅ Delivered — `bun run verify` ✓ · revisor APRUEBA (0 bloqueantes) · E2E accounts v1 21/21 re-verificado en dev
+
+### Hallazgo raíz del FIX 7 (y de varias mediciones desalineadas)
+
+El último commit del repo es de la fase 8.0 (29-sep): **todo el trabajo 8.2
+(CRUD de cuentas v1) y 8.3 (importador bancario) está sin commitear ni
+deployar**. Por eso `POST/PATCH/DELETE /api/v1/accounts` da 405/404 en
+producción aunque el código existe y pasa la batería E2E 21/21 (re-verificada
+esta sesión contra el dev server). El cierre del criterio del agente exige
+commit+push → deploy automático de Vercel.
+
+### Qué se entregó (FIX 1-6)
+
+- **FIX 1 — Submit ≥44px:** `w-full h-11 min-h-11` en auth-form;
+  `.h-11{height:calc(var(--spacing)*11)}` confirmado en CSS compilado y el
+  HTML servido renderiza `h-11 min-h-11`.
+- **FIX 2 — Micro-feedback (Deferencia, cero decoración):** ui/button.tsx
+  base `+duration-150 active:brightness-95`; ui/input.tsx
+  `transition-[color,border-color,box-shadow] duration-150`. Hover del
+  primario: `hover:bg-primary-hover` con token nuevo
+  `--primary-hover: color-mix(in oklab, var(--primary) 92%, black)` en :root
+  y .dark (oscurece 8%, adaptado por tema; antes `bg-primary/90` aclaraba por
+  opacidad). Los 43 tokens existentes intactos (diff solo-adiciones,
+  verificado por el revisor).
+- **FIX 3 — Login sin callejón:** error de credenciales/registro inline
+  (`role="alert" aria-live="polite"`, `bg-expense-soft text-expense`) SIN
+  revelar cuál campo falló y CONSERVANDO el email; se limpia al alternar
+  modo y al reintentar; "¿Olvidaste tu contraseña?" como mailto real al
+  dueño (restablecimiento vía scripts/reset-password.js), solo modo login.
+  Toasts de error eliminados del flujo de credenciales (validaciones previas
+  y toasts de éxito se mantienen).
+- **FIX 4 — Elevación con tinta del primary:** token
+  `--shadow-card: 0 1px 2px rgba(0,39,74,.06), 0 4px 12px rgba(0,39,74,.08)`
+  en `@theme inline` (genera la utility) aplicado a Card del login, KpiCard
+  y los 5 Cards de dashboard-view; utility verificada en CSS compilado.
+- **FIX 5 — 0 vacíos mudos:** transactions-view (nuevo usuario → icono
+  Receipt + frase + CTA "Registrar primera transacción" que abre el sheet
+  global; lista filtrada vacía → mensaje simple), reports-view (early
+  return DESPUÉS de todos los hooks — reglas de hooks respetadas — con
+  Card completo y CTA; topCategories vacío → "Sin gastos en este periodo"),
+  categories-manager (frase que guía al botón «Nueva» existente).
+  +7 claves i18n verificadas en union+es+en.
+- **FIX 6 — Montos:** tabular-nums ya global (body `font-feature-settings
+  'tnum'` + .tnum — confirmado, sin cambios); negativos en UN color
+  semántico: reports net-savings <0 ahora `text-expense` (budgets ya
+  cumplía, auditado sin cambios); hex crudo de chrome `#6B7280` →
+  `var(--muted-foreground)` en reports-view y dashboard-view (el de
+  categories-manager COLOR_OPTIONS/fallbacks de DATO se respeta).
+
+### Avisos del revisor (no bloqueantes)
+
+1. ~~authError persistía al alternar login/registro~~ — CORREGIDO por el
+   coordinador antes del cierre (setAuthError(null) en el toggle).
+2. CTAs de empty states `size="sm"` (h-9, 36px) — consistente con los
+   preexistentes; deuda táctil documentada (MEMORY §5.11).
+3. Mailto con email personal del dueño hardcodeado (su propio producto;
+   restablecimiento real vía script).
+4. Texto inline es/en en categories-manager (dictado por plan, patrón del
+   archivo) — consolidar en i18n en la pasada del módulo (§5.9).
+5. Preexistente fuera del diff: logo SVG del login con colores crudos.
+
+### Verificación
+
+- `bun run lint` ✓ · `bun run typecheck` ✓ · `bun run build` ✓ (22/22).
+- Revisor: APRUEBA con checklist HIG — 0 colores crudos en líneas nuevas,
+  contraste dark del error inline verificado sobre tokens, hooks intactos,
+  i18n 0 faltantes, schema/store intactos, CSS compilado con las utilities.
+- FIX 7: batería `scripts/e2e-accounts-v1.js` 21/21 contra dev server
+  (POST 201 → PATCH 200 → GET persistido → DELETE 409/200 → 401 sin key).
+- Nota dev: el dev server sin DATABASE_URL usa `/tmp/finzen.db` (seed
+  copiado de db/custom.db); las keys de test se generan/limpian contra ese
+  archivo. La key de test de esta sesión fue eliminada tras la corrida.
+
+### Archivos
+
+| Archivo | Cambio |
+|---|---|
+| `src/app/globals.css` | +`--color-primary-hover`/`--shadow-card` (theme) + `--primary-hover` (:root y .dark) — solo adiciones |
+| `src/components/ui/button.tsx` | +duration-150 active:brightness-95 · default hover → primary-hover |
+| `src/components/ui/input.tsx` | transition +border-color +duration-150 |
+| `src/components/auth/auth-form.tsx` | min-h-11 · error inline + mailto + shadow-card + limpieza de authError |
+| `src/lib/finzen/i18n.ts` | +7 claves (auth.forgotPassword, transactions.empty*, reports.empty*/noExpenses) |
+| `src/components/finzen/kpi-card.tsx` | shadow-card |
+| `src/components/finzen/dashboard-view.tsx` | shadow-card ×5 · hex fallback → token |
+| `src/components/finzen/transactions-view.tsx` | empty state condicional con CTA |
+| `src/components/finzen/reports-view.tsx` | early return empty state · noExpenses · savings<0 semántico · hex → token |
+| `src/components/finzen/categories-manager.tsx` | mensaje en listas vacías |
+
+### Pendiente del dueño (cierre del FIX 7 en producción)
+
+`git add -A && git commit && git push` → deploy automático (Vercel) → correr
+`bun scripts/e2e-accounts-v1.js --base https://finzen-zeta.vercel.app --key
+<key de Grazia>` → 21/21 cierra el criterio del agente. El commit incluiría
+las fases 8.1–8.4 acumuladas (SDD/multiagentes, CRUD cuentas, importador
+bancario y este pass UI).

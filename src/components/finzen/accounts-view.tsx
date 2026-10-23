@@ -23,6 +23,7 @@ const SUB_TYPE_META: Record<string, { icon: typeof Wallet; label: string; labelE
   cash: { icon: Banknote, label: 'Cash', labelEs: 'Efectivo' },
   crypto_wallet: { icon: Bitcoin, label: 'Crypto Wallet', labelEs: 'Billetera cripto' },
   investment: { icon: Coins, label: 'Investment', labelEs: 'Inversión' },
+  loan: { icon: Building2, label: 'Loan', labelEs: 'Préstamo' },
 };
 const SUB_TYPES = Object.keys(SUB_TYPE_META);
 
@@ -61,11 +62,13 @@ export function AccountsView() {
   }
 
   async function handleDelete(id: string) {
-    const linkedTx = transactions.filter(tx => tx.fromAccountId === id || tx.toAccountId === id).length;
     try {
       await deleteAccount(id);
-      toast.success(locale === 'es' ? `Cuenta eliminada${linkedTx > 0 ? ` (y ${linkedTx} transacciones)` : ''}` : `Account deleted${linkedTx > 0 ? ` (and ${linkedTx} transactions)` : ''}`);
-    } catch (err) { toast.error(locale === 'es' ? 'Error al eliminar' : 'Failed to delete'); }
+      toast.success(locale === 'es' ? 'Cuenta eliminada' : 'Account deleted');
+    } catch (err) {
+      const msg = (err as Error).message;
+      toast.error(locale === 'es' ? `No se pudo eliminar: ${msg}` : `Could not delete: ${msg}`);
+    }
   }
 
   const totalByCurrency = accounts.reduce((m, a) => {
@@ -196,8 +199,8 @@ export function AccountsView() {
                         <button className="p-2 rounded-md hover:bg-expense-soft text-muted-foreground hover:text-expense transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>{locale === 'es' ? '¿Eliminar cuenta?' : 'Delete account?'}</AlertDialogTitle><AlertDialogDescription>{locale === 'es' ? `Se eliminará "${a.name}"${linkedTx > 0 ? ` y ${linkedTx} transacciones` : ''}.` : `Delete "${a.name}"${linkedTx > 0 ? ` and ${linkedTx} transactions` : ''}?`}</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>{locale === 'es' ? 'Cancelar' : 'Cancel'}</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(a.id)} className="bg-expense text-white hover:bg-expense/90">{locale === 'es' ? 'Eliminar' : 'Delete'}</AlertDialogAction></AlertDialogFooter>
+                        <AlertDialogHeader><AlertDialogTitle>{locale === 'es' ? '¿Eliminar cuenta?' : 'Delete account?'}</AlertDialogTitle><AlertDialogDescription>{linkedTx > 0 ? (locale === 'es' ? `Esta cuenta tiene ${linkedTx} transacciones asociadas y no se puede eliminar (el historial se conserva). Para retirarla del patrimonio, edita su saldo a 0.` : `This account has ${linkedTx} linked transactions and cannot be deleted (history is preserved). To remove it from your net worth, edit its balance to 0.`) : (locale === 'es' ? `Se eliminará "${a.name}".` : `Delete "${a.name}"?`)}</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>{locale === 'es' ? 'Cancelar' : 'Cancel'}</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(a.id)} disabled={linkedTx > 0} className="bg-expense text-primary-foreground hover:bg-expense/90">{locale === 'es' ? 'Eliminar' : 'Delete'}</AlertDialogAction></AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>

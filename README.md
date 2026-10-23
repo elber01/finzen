@@ -50,8 +50,9 @@ un secreto desconocido (auditoría 27-sep-2026, P0-1).
 | `bun run build` | Build de producción (standalone) |
 | `bun run vercel-build` | Build para Vercel |
 | `bun run db:push` | Aplica schema.prisma a la DB de `DATABASE_URL` |
+| `bun run verify` | Barrera de calidad completa: lint + typecheck + build |
 
-**Antes de dar por terminada cualquier tarea:** `bun run lint && bun run typecheck && bun run build`.
+**Antes de dar por terminada cualquier tarea:** `bun run verify` (o `bun run lint && bun run typecheck && bun run build`).
 
 ## Variables de entorno
 
@@ -84,7 +85,9 @@ Los usuarios generan API keys en Ajustes → Integración con Agentes IA:
 | `PATCH`/`DELETE` | `/api/v1/expenses/:id` | Editar / borrar gasto |
 | `POST`/`GET` | `/api/v1/incomes` | Registrar / listar ingresos |
 | `PATCH`/`DELETE` | `/api/v1/incomes/:id` | Editar / borrar ingreso |
+| `POST` | `/api/v1/accounts` | Crear cuenta (asset/liability) — el agente mantiene el net worth |
 | `GET` | `/api/v1/accounts` | Listar cuentas (`?type=&currency=`) |
+| `PATCH`/`DELETE` | `/api/v1/accounts/:id` | Editar saldo/campos (ajuste directo) · Borrar (`409` si tiene transacciones) |
 | `GET` | `/api/v1/summary` | Resumen mensual: gastos + ingresos + net por categoría |
 
 Autenticación: header `Authorization: Bearer fz_...` o `x-api-key`.

@@ -122,7 +122,7 @@ export function DashboardView() {
         return {
           name: cat ? (locale === 'es' ? (cat.nameEs || cat.name) : (cat.nameEn || cat.name)) : 'Other',
           value: amount,
-          color: cat?.color ?? '#6B7280',
+          color: cat?.color ?? 'var(--muted-foreground)',
           icon: cat?.icon ?? '📦',
         };
       })
@@ -221,7 +221,7 @@ export function DashboardView() {
 
       {/* Empty state — no accounts yet */}
       {accounts.length === 0 && transactions.length === 0 ? (
-        <Card className="p-8 text-center">
+        <Card className="p-8 text-center shadow-card">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">👋</span>
           </div>
@@ -294,7 +294,7 @@ export function DashboardView() {
           </div>
 
           {/* Cash flow chart */}
-          <Card className="p-5">
+          <Card className="p-5 shadow-card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">{t['dashboard.cashFlow']}</h2>
               <span className="text-xs text-muted-foreground">12 {locale === 'es' ? 'meses' : 'months'}</span>
@@ -351,7 +351,7 @@ export function DashboardView() {
           {/* Distribution + Alerts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Expense distribution donut */}
-            <Card className="p-5 lg:col-span-1">
+            <Card className="p-5 lg:col-span-1 shadow-card">
               <h2 className="text-lg font-semibold mb-4">{t['dashboard.expenseDistribution']}</h2>
               {categoryBreakdown.length > 0 ? (
                 <>
@@ -414,7 +414,7 @@ export function DashboardView() {
             </Card>
 
             {/* Alerts */}
-            <Card className="p-5 lg:col-span-2">
+            <Card className="p-5 lg:col-span-2 shadow-card">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">
                   {t['dashboard.alerts']} ({alerts.length})
@@ -471,7 +471,7 @@ export function DashboardView() {
           </div>
 
           {/* Recent transactions */}
-          <Card className="p-5">
+          <Card className="p-5 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold">{t['dashboard.recentTransactions']}</h2>
               <Button

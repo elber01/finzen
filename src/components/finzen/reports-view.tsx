@@ -13,14 +13,14 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Download } from 'lucide-react';
+import { Download, Plus, BarChart3 } from 'lucide-react';
 import { useFinZenStore } from '@/store/finzen-store';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { translations } from '@/lib/finzen/i18n';
 import { convertAmount, formatMoney, type CurrencyCode } from '@/lib/finzen/currency';
 
 export function ReportsView() {
-  const { transactions, categories, locale, baseCurrency } = useFinZenStore();
+  const { transactions, categories, locale, baseCurrency, setAddSheetOpen } = useFinZenStore();
   const t = translations[locale];
   const isMobile = useIsMobile();
 
@@ -60,7 +60,7 @@ export function ReportsView() {
         return {
           name: cat ? (locale === 'es' ? (cat.nameEs || cat.name) : (cat.nameEn || cat.name)) : 'Other',
           icon: cat?.icon ?? '📦',
-          color: cat?.color ?? '#6B7280',
+          color: cat?.color ?? 'var(--muted-foreground)',
           amount,
           pct: totals.expenses > 0 ? (amount / totals.expenses) * 100 : 0,
         };
@@ -94,6 +94,28 @@ export function ReportsView() {
       return { month: label, income, expenses };
     });
   }, [transactions, baseCurrency, locale]);
+
+  // Empty state — usuario sin transacciones (tras TODOS los hooks, nunca antes)
+  if (transactions.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl sm:text-2xl font-bold">{t['reports.title']}</h1>
+        <Card className="p-8 text-center shadow-card">
+          <div className="w-14 h-14 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto mb-3">
+            <BarChart3 className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-1">{t['reports.emptyTitle']}</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+            {t['reports.emptyHint']}
+          </p>
+          <Button size="sm" onClick={() => setAddSheetOpen(true)}>
+            <Plus className="w-4 h-4 mr-1" />
+            {t['reports.emptyCta']}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -136,7 +158,7 @@ export function ReportsView() {
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground uppercase tracking-wide">{t['reports.netSavings']}</div>
-          <div className="text-xl sm:text-2xl font-bold tabular-nums mt-1">
+          <div className={`text-xl sm:text-2xl font-bold tabular-nums mt-1${totals.savings < 0 ? ' text-expense' : ''}`}>
             {formatMoney(totals.savings, baseCurrency as CurrencyCode, locale)}
           </div>
           <div className="text-xs text-muted-foreground">{totals.ratio.toFixed(1)}%</div>
@@ -200,6 +222,9 @@ export function ReportsView() {
       <Card className="p-5">
         <h2 className="text-lg font-semibold mb-4">{t['reports.topCategories']}</h2>
         <div className="space-y-3">
+          {topCategories.length === 0 && (
+            <p className="text-sm text-muted-foreground py-4">{t['reports.noExpenses']}</p>
+          )}
           {topCategories.map((cat, i) => (
             <div key={cat.name} className="space-y-1">
               <div className="flex items-center justify-between text-sm">

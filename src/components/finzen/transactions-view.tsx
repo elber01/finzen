@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Download, Filter } from 'lucide-react';
+import { Search, Download, Filter, Receipt, Plus } from 'lucide-react';
 import { useFinZenStore } from '@/store/finzen-store';
 import { translations } from '@/lib/finzen/i18n';
 import { toast } from 'sonner';
@@ -251,9 +251,25 @@ export function TransactionsView() {
       {/* List */}
       <Card className="p-2">
         {grouped.length === 0 ? (
-          <div className="text-center text-sm text-muted-foreground py-12">
-            {t['transactions.noTransactions']}
-          </div>
+          transactions.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto mb-3">
+                <Receipt className="w-7 h-7 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">{t['transactions.noTransactions']}</h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+                {t['transactions.emptyHint']}
+              </p>
+              <Button size="sm" onClick={() => setAddSheetOpen(true)}>
+                <Plus className="w-4 h-4 mr-1" />
+                {t['transactions.emptyCta']}
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center text-sm text-muted-foreground py-12">
+              {t['transactions.noTransactions']}
+            </div>
+          )
         ) : (
           <div className="space-y-3">
             {grouped.map((group) => (

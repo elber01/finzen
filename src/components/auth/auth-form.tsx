@@ -33,6 +33,7 @@ export function AuthForm() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
   const strengthLabel = strength === 0 ? null : strength === 1
@@ -53,6 +54,7 @@ export function AuthForm() {
       return;
     }
 
+    setAuthError(null);
     setLoading(true);
 
     try {
@@ -65,7 +67,7 @@ export function AuthForm() {
 
         if (!res.ok) {
           const data = await res.json();
-          toast.error(data.error || t['auth.errorGeneric']);
+          setAuthError(data.error || t['auth.errorGeneric']);
           setLoading(false);
           return;
         }
@@ -78,7 +80,7 @@ export function AuthForm() {
       });
 
       if (result?.error) {
-        toast.error(t['auth.invalidCredentials']);
+        setAuthError(t['auth.invalidCredentials']);
         setLoading(false);
         return;
       }
@@ -87,7 +89,7 @@ export function AuthForm() {
       router.push('/');
       router.refresh();
     } catch (err) {
-      toast.error(t['auth.errorGeneric']);
+      setAuthError(t['auth.errorGeneric']);
       setLoading(false);
     }
   }
@@ -97,7 +99,7 @@ export function AuthForm() {
       {/* Acentos de fondo sutiles — profundidad sin ruido */}
       <div aria-hidden className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div aria-hidden className="absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-info/10 blur-3xl pointer-events-none" />
-      <Card className="relative w-full max-w-md p-8">
+      <Card className="relative w-full max-w-md p-8 shadow-card">
         {/* Idioma — accesible antes del login */}
         <button
           onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
@@ -184,10 +186,20 @@ export function AuthForm() {
             )}
           </div>
 
+          {authError && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="text-sm text-expense bg-expense-soft px-3 py-2.5 rounded-md"
+            >
+              {authError}
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 text-base font-semibold"
+            className="w-full h-11 min-h-11 text-base font-semibold"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -198,13 +210,21 @@ export function AuthForm() {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+            onClick={() => { setAuthError(null); setMode(mode === 'login' ? 'register' : 'login'); }}
             className={cn(
               'text-sm text-muted-foreground hover:text-foreground transition-colors'
             )}
           >
             {mode === 'login' ? t['auth.noAccount'] : t['auth.hasAccount']}
           </button>
+          {mode === 'login' && (
+            <a
+              href="mailto:hamilton.edwin@gmail.com?subject=FinZen%20-%20Restablecer%20contrase%C3%B1a"
+              className="block mt-2 text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+            >
+              {t['auth.forgotPassword']}
+            </a>
+          )}
         </div>
       </Card>
     </div>

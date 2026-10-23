@@ -34,6 +34,7 @@ export type TranslationKey =
   | 'auth.strength.weak'
   | 'auth.strength.fair'
   | 'auth.strength.strong'
+  | 'auth.forgotPassword'
   | 'dashboard.greeting.morning'
   | 'dashboard.greeting.afternoon'
   | 'dashboard.greeting.evening'
@@ -64,6 +65,8 @@ export type TranslationKey =
   | 'transactions.thisYear'
   | 'transactions.lastYear'
   | 'transactions.noTransactions'
+  | 'transactions.emptyHint'
+  | 'transactions.emptyCta'
   | 'transactions.showing'
   | 'transactions.of'
   | 'transactions.today'
@@ -106,6 +109,10 @@ export type TranslationKey =
   | 'reports.incomeVsExpenses'
   | 'reports.topCategories'
   | 'reports.export'
+  | 'reports.emptyTitle'
+  | 'reports.emptyHint'
+  | 'reports.emptyCta'
+  | 'reports.noExpenses'
   | 'import.title'
   | 'import.csv'
   | 'import.csvDesc'
@@ -113,6 +120,20 @@ export type TranslationKey =
   | 'import.receiptDesc'
   | 'import.bank'
   | 'import.bankDesc'
+  | 'import.bankChoose'
+  | 'import.bankUpload'
+  | 'import.bankUploadHint'
+  | 'import.bankMapColumns'
+  | 'import.bankPreview'
+  | 'import.bankTarget'
+  | 'import.bankImport'
+  | 'import.bankImported'
+  | 'import.bankDuplicates'
+  | 'import.bankInvalid'
+  | 'import.bankDetected'
+  | 'import.bankRange'
+  | 'import.bankOther'
+  | 'import.bankOfxAuto'
   | 'import.recentImports'
   | 'settings.title'
   | 'settings.profile'
@@ -166,6 +187,7 @@ const es: Record<TranslationKey, string> = {
   'auth.strength.weak': 'Débil',
   'auth.strength.fair': 'Aceptable',
   'auth.strength.strong': 'Fuerte',
+  'auth.forgotPassword': '¿Olvidaste tu contraseña?',
   'dashboard.greeting.morning': 'Buenos días',
   'dashboard.greeting.afternoon': 'Buenas tardes',
   'dashboard.greeting.evening': 'Buenas noches',
@@ -196,6 +218,8 @@ const es: Record<TranslationKey, string> = {
   'transactions.thisYear': 'Este año',
   'transactions.lastYear': 'Año pasado',
   'transactions.noTransactions': 'No hay transacciones',
+  'transactions.emptyHint': 'Registra tu primer gasto o ingreso para verlos aquí.',
+  'transactions.emptyCta': 'Registrar primera transacción',
   'transactions.showing': 'Mostrando',
   'transactions.of': 'de',
   'transactions.today': 'HOY',
@@ -238,13 +262,31 @@ const es: Record<TranslationKey, string> = {
   'reports.incomeVsExpenses': 'Ingresos vs Gastos',
   'reports.topCategories': 'Categorías Principales',
   'reports.export': 'Exportar',
+  'reports.emptyTitle': 'Sin datos aún',
+  'reports.emptyHint': 'Registra transacciones para ver tus reportes y análisis.',
+  'reports.emptyCta': 'Registrar transacción',
+  'reports.noExpenses': 'Sin gastos en este periodo',
   'import.title': 'Centro de Importación',
   'import.csv': 'Importar CSV o Excel',
   'import.csvDesc': 'Arrastra un archivo .csv, .xlsx o .xls',
   'import.receipt': 'Escanear Recibo (OCR)',
   'import.receiptDesc': 'Toma una foto o sube una imagen',
-  'import.bank': 'Conectar Banco (Plaid)',
-  'import.bankDesc': 'Importación automática y segura',
+  'import.bank': 'Importar desde tu banco',
+  'import.bankDesc': 'Estados de cuenta CSV u OFX/QFX',
+  'import.bankChoose': 'Elige tu entidad bancaria',
+  'import.bankUpload': 'Sube tu estado de cuenta',
+  'import.bankUploadHint': 'Descarga el estado de cuenta (CSV u OFX/QFX) desde la banca en línea de tu banco y súbelo aquí.',
+  'import.bankMapColumns': 'Confirma el mapeo de columnas',
+  'import.bankPreview': 'Vista previa',
+  'import.bankTarget': 'Cuenta destino',
+  'import.bankImport': 'Importar transacciones',
+  'import.bankImported': 'Importadas',
+  'import.bankDuplicates': 'Duplicados omitidos',
+  'import.bankInvalid': 'Filas inválidas',
+  'import.bankDetected': 'transacciones detectadas',
+  'import.bankRange': 'Rango',
+  'import.bankOther': 'Otro banco (genérico)',
+  'import.bankOfxAuto': 'OFX/QFX detectado — mapeo automático',
   'import.recentImports': 'Importaciones recientes',
   'settings.title': 'Ajustes',
   'settings.profile': 'Perfil',
@@ -299,6 +341,7 @@ const en: Record<TranslationKey, string> = {
   'auth.strength.weak': 'Weak',
   'auth.strength.fair': 'Fair',
   'auth.strength.strong': 'Strong',
+  'auth.forgotPassword': 'Forgot your password?',
   'dashboard.greeting.morning': 'Good morning',
   'dashboard.greeting.afternoon': 'Good afternoon',
   'dashboard.greeting.evening': 'Good evening',
@@ -329,6 +372,8 @@ const en: Record<TranslationKey, string> = {
   'transactions.thisYear': 'This year',
   'transactions.lastYear': 'Last year',
   'transactions.noTransactions': 'No transactions',
+  'transactions.emptyHint': 'Record your first expense or income to see it here.',
+  'transactions.emptyCta': 'Add first transaction',
   'transactions.showing': 'Showing',
   'transactions.of': 'of',
   'transactions.today': 'TODAY',
@@ -371,13 +416,31 @@ const en: Record<TranslationKey, string> = {
   'reports.incomeVsExpenses': 'Income vs Expenses',
   'reports.topCategories': 'Top Categories',
   'reports.export': 'Export',
+  'reports.emptyTitle': 'No data yet',
+  'reports.emptyHint': 'Record transactions to see your reports and analytics.',
+  'reports.emptyCta': 'Add transaction',
+  'reports.noExpenses': 'No expenses in this period',
   'import.title': 'Import Center',
   'import.csv': 'Import CSV or Excel',
   'import.csvDesc': 'Drop a .csv, .xlsx, or .xls file',
   'import.receipt': 'Scan Receipt (OCR)',
   'import.receiptDesc': 'Take a photo or upload an image',
-  'import.bank': 'Connect Bank (Plaid)',
-  'import.bankDesc': 'Secure auto-import',
+  'import.bank': 'Import from your bank',
+  'import.bankDesc': 'Bank statements CSV or OFX/QFX',
+  'import.bankChoose': 'Choose your bank',
+  'import.bankUpload': 'Upload your statement',
+  'import.bankUploadHint': "Download the statement (CSV or OFX/QFX) from your bank's online banking and upload it here.",
+  'import.bankMapColumns': 'Confirm column mapping',
+  'import.bankPreview': 'Preview',
+  'import.bankTarget': 'Target account',
+  'import.bankImport': 'Import transactions',
+  'import.bankImported': 'Imported',
+  'import.bankDuplicates': 'Duplicates skipped',
+  'import.bankInvalid': 'Invalid rows',
+  'import.bankDetected': 'transactions detected',
+  'import.bankRange': 'Range',
+  'import.bankOther': 'Other bank (generic)',
+  'import.bankOfxAuto': 'OFX/QFX detected — automatic mapping',
   'import.recentImports': 'Recent imports',
   'settings.title': 'Settings',
   'settings.profile': 'Profile',
