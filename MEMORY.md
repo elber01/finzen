@@ -98,9 +98,14 @@ coordinador→implementador→revisor; revisor APRUEBA, 0 bloqueantes):
   (net savings < 0 en reports corregido; budgets ya cumplía); hex crudo de
   chrome `#6B7280` → `var(--muted-foreground)` en reports y dashboard.
 - **FIX 7 (API agente):** los endpoints 8.2 ya existen y pasan 21/21 en
-  dev (re-verificado esta sesión). Producción da 405/404 porque TODO el
-  trabajo 8.2–8.4 está SIN commitear (último commit: 8.0, 29-sep) —
-  el cierre del criterio del agente requiere commit+push→deploy del dueño.
+  dev (re-verificado esta sesión). Commit+push hecho por el agente con
+  aprobación del dueño (`30f81e8` + reintento `76c2c49`), PERO **Vercel
+  bloqueó ambos deployments** ("Deployment was blocked" — anti-abuso a
+  nivel de CUENTA, no error de build; el build ni corrió). Producción
+  sigue sirviendo el deploy del 29-sep. Pendiente de Edwin: ver el banner
+  del deployment bloqueado en el dashboard Vercel (appeal/verificación de
+  cuenta, revisar Billing) → redeploy → correr la batería con la key de
+  Grazia para cerrar el criterio.
 - Nota dev: sin `DATABASE_URL`, `next dev` usa `/tmp/finzen.db` (seed copiado
   de `db/custom.db` en el primer cold start); las keys de test deben
   generarse contra ESE archivo.

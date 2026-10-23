@@ -5891,10 +5891,23 @@ commit+push → deploy automático de Vercel.
 | `src/components/finzen/reports-view.tsx` | early return empty state · noExpenses · savings<0 semántico · hex → token |
 | `src/components/finzen/categories-manager.tsx` | mensaje en listas vacías |
 
-### Pendiente del dueño (cierre del FIX 7 en producción)
+### Estado del deploy (post-commit, 23-oct 00:45 UTC)
 
-`git add -A && git commit && git push` → deploy automático (Vercel) → correr
-`bun scripts/e2e-accounts-v1.js --base https://finzen-zeta.vercel.app --key
-<key de Grazia>` → 21/21 cierra el criterio del agente. El commit incluiría
-las fases 8.1–8.4 acumuladas (SDD/multiagentes, CRUD cuentas, importador
-bancario y este pass UI).
+Con aprobación explícita del dueño se commiteó (37 archivos, +2865/−67,
+fases 8.1–8.4) y se pusheó `30f81e8` a `origin/main`. **Vercel bloqueó el
+deployment** ("Deployment was blocked" en el status check del commit —
+bloqueo anti-abuso a NIVEL DE CUENTA; el build ni siquiera corrió). Un
+reintento con commit vacío (`76c2c49`) resultó igualmente bloqueado. El
+autor del commit es el mismo de los deploys exitosos de 29-sep, así que no
+es el patrón de autor. Producción sigue sirviendo el deploy del 29-sep sin
+afectación (401/405/404 = comportamiento viejo esperado).
+
+**Pendiente de Edwin para cerrar el FIX 7 en producción:**
+1. Dashboard Vercel → deployment bloqueado de `finzen` → seguir el
+   banner de apeel/verificación (o contactar soporte); revisar también
+   Billing & Usage (factura pendiente/cuota).
+2. Desbloqueada la cuenta → Deployments → Redeploy del último commit (o
+   push de este commit local de docs).
+3. Correr: `bun scripts/e2e-accounts-v1.js --base https://finzen-zeta.vercel.app --key <key de Grazia>` → 21/21 cierra el criterio.
+4. Smoke post-deploy: `curl -X POST .../api/v1/accounts` sin key → 401
+   (antes 405); login renderiza `min-h-11`/`shadow-card`.
